@@ -1,0 +1,152 @@
+{% extends "ids/base.html" %}
+{% block title %}Live Monitor — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Real-Time Traffic Monitor</h1>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+    {% if interfaces %}
+    <select id="ifaceSelect" class="btn btn-outline" style="padding:0.5rem 0.75rem">
+      {% for iface in interfaces %}
+      <option value="{{ iface.id }}">{{ iface.name }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    <button id="refreshBtn" class="btn btn-outline" onclick="refreshCapture()">↻ Refresh</button>
+    <button id="startBtn" class="btn btn-primary" onclick="startMonitor()">▶ Start Monitoring</button>
+    <button id="stopBtn" class="btn btn-outline" onclick="stopMonitor()" style="display:none">⏹ Stop</button>
+  </div>
+</div>
+
+{% if wireshark_ok %}
+<div class="message message-success" style="margin-bottom:1rem">
+  Wireshark capture active via <code style="color:#6ee7b7">{{ tshark_path }}</code>
+</div>
+{% else %}
+<div class="message message-error" style="margin-bottom:1rem">
+  Wireshark (tshark) not found. Install from <a href="https://www.wireshark.org/download.html" target="_blank">wireshark.org</a>
+  and run the server as Administrator with Npcap enabled.
+</div>
+{% endif %}
+
+<div class="monitor-panel">
+  <div class="monitor-status">
+    <div class="pulse" id="pulseDot" style="background:var(--muted);animation:none"></div>
+    <span id="statusText">Monitoring inactive — capture uses Wireshark/tshark</span>
+    <span style="margin-left:auto;color:var(--muted)" id="packetCount">0 packets analyzed</span>
+  </div>
+  <div id="captureInfo" style="color:var(--muted);font-size:0.8rem;padding:0 0 0.75rem"></div>
+  <div class="feed" id="feed">
+    <div style="color:var(--muted);text-align:center;padding:2rem">
+      Click <strong>Refresh</strong> to capture live packets, or <strong>Start Monitoring</strong> for auto-capture every 3s.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let interval = null, count = 0;
+const csrf = '{{ csrf_token }}';
+const wiresharkOk = {{ wireshark_ok|yesno:"true,false" }};
+
+function getInterface() {
+  const sel = document.getElementById('ifaceSelect');
+  return sel ? sel.value : '';
+}
+
+function addFeedItem(data) {
+  const feed = document.getElementById('feed');
+  if (count === 0) feed.innerHTML = '';
+  const item = document.createElement('div');
+  item.className = 'feed-item' + (data.is_threat ? ' threat' : '');
+  item.innerHTML = `
+    <span>${data.source_ip} → ${data.dest_ip} [${data.protocol}]</span>
+    <span>
+      <span class="badge ${data.is_threat ? 'badge-threat' : 'badge-normal'}">${data.prediction.toUpperCase()}</span>
+      <span style="color:var(--muted);margin-left:0.5rem">${data.confidence}%</span>
+    </span>`;
+  feed.prepend(item);
+  if (feed.children.length > 50) feed.lastChild.remove();
+}
+
+function setStatus(msg, active) {
+  document.getElementById('statusText').textContent = msg;
+  const dot = document.getElementById('pulseDot');
+  if (active) {
+    dot.style.background = 'var(--success)';
+    dot.style.animation = 'pulse 2s infinite';
+  } else {
+    dot.style.background = 'var(--muted)';
+    dot.style.animation = 'none';
+  }
+}
+
+async function fetchCapture() {
+  const iface = getInterface();
+  const url = '{% url "capture_traffic" %}' + (iface ? '?interface=' + encodeURIComponent(iface) : '');
+  document.getElementById('refreshBtn').disabled = true;
+  setStatus('Capturing packets via Wireshark...', true);
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const info = document.getElementById('captureInfo');
+
+    if (!data.ok) {
+      setStatus(data.message || 'Capture failed', false);
+      info.textContent = '';
+      return data;
+    }
+
+    info.textContent = (data.message || '') +
+      (data.interface_name ? ' · Interface: ' + data.interface_name : '');
+
+    if (data.packets.length === 0) {
+      setStatus('No IP packets captured — try Refresh again or generate network traffic', false);
+      return data;
+    }
+
+    data.packets.forEach(pkt => {
+      count++;
+      addFeedItem(pkt);
+    });
+    document.getElementById('packetCount').textContent = count + ' packets analyzed';
+    setStatus('Last capture: ' + data.count + ' packet(s) analyzed', !!interval);
+    return data;
+  } catch (err) {
+    setStatus('Capture error: ' + err.message, false);
+    return { ok: false, packets: [] };
+  } finally {
+    document.getElementById('refreshBtn').disabled = false;
+  }
+}
+
+function refreshCapture() {
+  if (!wiresharkOk) {
+    setStatus('Install Wireshark (tshark) to capture live packets', false);
+    return;
+  }
+  fetchCapture();
+}
+
+function startMonitor() {
+  if (!wiresharkOk) {
+    setStatus('Install Wireshark (tshark) to capture live packets', false);
+    return;
+  }
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'inline-flex';
+  setStatus('Monitoring active — capturing via Wireshark every 3s...', true);
+  fetchCapture();
+  interval = setInterval(fetchCapture, 3000);
+}
+
+function stopMonitor() {
+  clearInterval(interval);
+  interval = null;
+  document.getElementById('startBtn').style.display = 'inline-flex';
+  document.getElementById('stopBtn').style.display = 'none';
+  setStatus('Monitoring stopped', false);
+}
+</script>
+{% endblock %}

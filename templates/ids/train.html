@@ -1,0 +1,91 @@
+{% extends "ids/base.html" %}
+{% block title %}ML Training — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Model Training & Evaluation</h1>
+  <form method="post" action="{% url 'train_model' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">🔄 Retrain Model</button>
+  </form>
+</div>
+
+<div class="chart-card" style="margin-bottom:1.5rem">
+  <h3>About the Model</h3>
+  <p style="color:var(--muted);font-size:0.875rem;line-height:1.6;margin-top:0.5rem">
+    NetSentinel uses a Random Forest classifier trained on NSL-KDD-style network features.
+    It classifies traffic as: <strong>normal</strong>, <strong>DoS</strong>, <strong>Probe</strong>,
+    <strong>R2L</strong>, <strong>U2R</strong>, or <strong>brute_force</strong>.
+    Click "Retrain Model" to train on 3,000 synthetic samples.
+  </p>
+</div>
+
+{% if metrics %}
+<div class="metrics-grid">
+  <div class="metric-box">
+    <div class="val">{% widthratio metrics.accuracy 1 100 %}%</div>
+    <div class="lbl">Accuracy</div>
+  </div>
+  <div class="metric-box">
+    <div class="val">{% widthratio metrics.precision 1 100 %}%</div>
+    <div class="lbl">Precision</div>
+  </div>
+  <div class="metric-box">
+    <div class="val">{% widthratio metrics.recall 1 100 %}%</div>
+    <div class="lbl">Recall</div>
+  </div>
+  <div class="metric-box">
+    <div class="val">{% widthratio metrics.f1_score 1 100 %}%</div>
+    <div class="lbl">F1 Score</div>
+  </div>
+</div>
+
+<div class="charts-grid" style="margin-top:1.5rem">
+  <div class="chart-card">
+    <h3>Model Performance Metrics</h3>
+    <div class="chart-wrap"><canvas id="metricsChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Training Info</h3>
+    <div style="padding:1rem 0">
+      <p style="margin-bottom:0.75rem"><span style="color:var(--muted)">Samples Trained:</span> <strong>{{ metrics.samples_trained }}</strong></p>
+      <p style="margin-bottom:0.75rem"><span style="color:var(--muted)">Algorithm:</span> <strong>Random Forest (100 trees)</strong></p>
+      <p style="margin-bottom:0.75rem"><span style="color:var(--muted)">Features:</span> <strong>41 network features</strong></p>
+      <p><span style="color:var(--muted)">Last Trained:</span> <strong>{{ metrics.trained_at|timesince }} ago</strong></p>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="monitor-panel" style="text-align:center;padding:3rem">
+  <p style="color:var(--muted);margin-bottom:1rem">No model trained yet.</p>
+  <form method="post" action="{% url 'train_model' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Train Initial Model</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if metrics %}
+<script>
+new Chart(document.getElementById('metricsChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score'],
+    datasets: [{
+      label: 'Model Performance',
+      data: [{{ metrics.accuracy|floatformat:2 }}, {{ metrics.precision|floatformat:2 }}, {{ metrics.recall|floatformat:2 }}, {{ metrics.f1_score|floatformat:2 }}],
+      backgroundColor: 'rgba(6,182,212,0.2)',
+      borderColor: '#06b6d4',
+      pointBackgroundColor: '#06b6d4'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { r: { beginAtZero: true, max: 1, ticks: { color: '#94a3b8' }, grid: { color: '#243049' }, pointLabels: { color: '#94a3b8' } } },
+    plugins: { legend: { labels: { color: '#94a3b8' } } }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

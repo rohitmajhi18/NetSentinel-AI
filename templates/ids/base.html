@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}NetSentinel AI{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">NetSentinel AI</div>
+      <ul class="nav">
+        <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>Dashboard</span></a></li>
+        <li><a href="{% url 'monitor' %}" class="{% if request.resolver_match.url_name == 'monitor' %}active{% endif %}">📡 <span>Live Monitor</span></a></li>
+        <li><a href="{% url 'alerts' %}" class="{% if request.resolver_match.url_name == 'alerts' %}active{% endif %}">🚨 <span>Alerts</span></a></li>
+        <li><a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">📋 <span>Traffic Logs</span></a></li>
+        <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠 <span>ML Training</span></a></li>
+        <li><a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">📈 <span>Reports</span></a></li>
+      </ul>
+      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm" style="margin-top:auto">Logout</a>
+    </aside>
+    <main class="main">
+      {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

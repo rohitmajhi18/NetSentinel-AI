@@ -1,0 +1,41 @@
+{% extends "ids/base.html" %}
+{% block title %}Traffic Logs — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Traffic Logs</h1>
+  <a href="{% url 'monitor' %}" class="btn btn-primary">Start Live Monitor</a>
+</div>
+
+<div class="table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Source IP</th><th>Dest IP</th><th>Protocol</th>
+        <th>Duration</th><th>Bytes</th><th>Prediction</th><th>Confidence</th><th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.source_ip }}</td>
+        <td>{{ log.dest_ip }}</td>
+        <td>{{ log.protocol }}</td>
+        <td>{{ log.duration|floatformat:1 }}s</td>
+        <td>{{ log.src_bytes }} / {{ log.dst_bytes }}</td>
+        <td>
+          {% if log.prediction == "normal" %}
+          <span class="badge badge-normal">NORMAL</span>
+          {% else %}
+          <span class="badge badge-threat">{{ log.prediction|upper }}</span>
+          {% endif %}
+        </td>
+        <td>{{ log.confidence|floatformat:1 }}%</td>
+        <td>{{ log.created_at|timesince }} ago</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:2rem">No traffic logs. Run setup or start monitoring.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

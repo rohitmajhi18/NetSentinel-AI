@@ -1,0 +1,70 @@
+{% extends "ids/base.html" %}
+{% block title %}Reports — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Security Reports</h1></div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Logs</div>
+    <div class="stat-value">{{ total_logs }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Resolved Alerts</div>
+    <div class="stat-value success">{{ resolved }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Open Alerts</div>
+    <div class="stat-value danger">{{ unresolved }}</div>
+  </div>
+  {% if metrics %}
+  <div class="stat-card">
+    <div class="stat-label">Detection Accuracy</div>
+    <div class="stat-value success">{% widthratio metrics.accuracy 1 100 %}%</div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Alerts by Attack Type (7 days)</h3>
+    <div class="chart-wrap"><canvas id="reportChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Alert Resolution Status</h3>
+    <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+new Chart(document.getElementById('reportChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for a in alerts_by_type %}'{{ a.attack_type|upper }}'{% if not forloop.last %},{% endif %}{% empty %}'No Data'{% endfor %}],
+    datasets: [{
+      label: 'Alert Count',
+      data: [{% for a in alerts_by_type %}{{ a.count }}{% if not forloop.last %},{% endif %}{% empty %}0{% endfor %}],
+      backgroundColor: ['#ef4444','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#10b981']
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#94a3b8' }, grid: { color: '#243049' } },
+      y: { ticks: { color: '#94a3b8' }, grid: { color: '#243049' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Resolved', 'Open'],
+    datasets: [{ data: [{{ resolved }}, {{ unresolved }}], backgroundColor: ['#10b981', '#ef4444'] }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } } }
+});
+</script>
+{% endblock %}

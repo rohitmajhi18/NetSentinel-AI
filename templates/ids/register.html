@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — NetSentinel AI</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1>NetSentinel AI</h1>
+      <p class="sub">Create your security analyst account</p>
+      {% if form.errors %}
+      <div class="message message-error">{{ form.errors }}</div>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" name="username" required maxlength="150">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password1" required>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" name="password2" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+      </form>
+      <div class="auth-footer">Already have an account? <a href="{% url 'login' %}">Sign In</a></div>
+    </div>
+  </div>
+</body>
+</html>

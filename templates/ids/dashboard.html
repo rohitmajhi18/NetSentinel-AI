@@ -1,0 +1,145 @@
+{% extends "ids/base.html" %}
+{% block title %}Dashboard — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Security Dashboard</h1>
+  <div class="user-info">Welcome, {{ user.username }}</div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Active Alerts</div>
+    <div class="stat-value danger">{{ total_alerts }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Threats (24h)</div>
+    <div class="stat-value warning">{{ threats_today }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Traffic Logs</div>
+    <div class="stat-value">{{ total_logs }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Model Accuracy</div>
+    <div class="stat-value success">{{ model_accuracy }}%</div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Attack Distribution (24h)</h3>
+    <div class="chart-wrap"><canvas id="attackChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Alert Severity</h3>
+    <div class="chart-wrap"><canvas id="severityChart"></canvas></div>
+  </div>
+  <div class="chart-card full">
+    <h3>Traffic Timeline — Normal vs Threats</h3>
+    <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>Traffic by Protocol</h3>
+    <div class="chart-wrap"><canvas id="protocolChart"></canvas></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+  <div class="table-card">
+    <h3>Recent Alerts</h3>
+    <table>
+      <thead><tr><th>Type</th><th>Source</th><th>Severity</th><th>Confidence</th></tr></thead>
+      <tbody>
+        {% for alert in recent_alerts %}
+        <tr>
+          <td><span class="badge badge-threat">{{ alert.attack_type|upper }}</span></td>
+          <td>{{ alert.source_ip }}</td>
+          <td><span class="badge badge-{{ alert.severity }}">{{ alert.severity }}</span></td>
+          <td>{{ alert.confidence|floatformat:0 }}%</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--muted)">No alerts yet. Start the live monitor.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-card">
+    <h3>Recent Traffic</h3>
+    <table>
+      <thead><tr><th>Source</th><th>Dest</th><th>Prediction</th><th>Confidence</th></tr></thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td>{{ log.source_ip }}</td>
+          <td>{{ log.dest_ip }}</td>
+          <td>
+            {% if log.prediction == "normal" %}
+            <span class="badge badge-normal">NORMAL</span>
+            {% else %}
+            <span class="badge badge-threat">{{ log.prediction|upper }}</span>
+            {% endif %}
+          </td>
+          <td>{{ log.confidence|floatformat:0 }}%</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--muted)">No traffic logs yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const data = {{ charts|safe }};
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { labels: { color: '#94a3b8' } } },
+  scales: {
+    x: { ticks: { color: '#94a3b8' }, grid: { color: '#243049' } },
+    y: { ticks: { color: '#94a3b8' }, grid: { color: '#243049' } }
+  }
+};
+
+new Chart(document.getElementById('attackChart'), {
+  type: 'doughnut',
+  data: {
+    labels: data.attack_labels,
+    datasets: [{ data: data.attack_values, backgroundColor: ['#06b6d4','#ef4444','#f59e0b','#8b5cf6','#10b981','#ec4899'] }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#94a3b8' } } } }
+});
+
+new Chart(document.getElementById('severityChart'), {
+  type: 'bar',
+  data: {
+    labels: data.severity_labels,
+    datasets: [{ label: 'Alerts', data: data.severity_values, backgroundColor: ['#10b981','#f59e0b','#ef4444','#dc2626'] }]
+  },
+  options: chartDefaults
+});
+
+new Chart(document.getElementById('timelineChart'), {
+  type: 'line',
+  data: {
+    labels: data.hour_labels,
+    datasets: [
+      { label: 'Normal', data: data.normal_counts, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 },
+      { label: 'Threats', data: data.threat_counts, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 }
+    ]
+  },
+  options: chartDefaults
+});
+
+new Chart(document.getElementById('protocolChart'), {
+  type: 'polarArea',
+  data: {
+    labels: data.proto_labels,
+    datasets: [{ data: data.proto_values, backgroundColor: ['#06b6d4','#8b5cf6','#f59e0b','#10b981','#ef4444'] }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } } }
+});
+</script>
+{% endblock %}

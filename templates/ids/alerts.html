@@ -1,0 +1,47 @@
+{% extends "ids/base.html" %}
+{% block title %}Alerts — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Security Alerts</h1>
+  <div>
+    <a href="?severity=high" class="btn btn-outline btn-sm">High</a>
+    <a href="?severity=critical" class="btn btn-outline btn-sm">Critical</a>
+    <a href="{% url 'alerts' %}" class="btn btn-outline btn-sm">All</a>
+  </div>
+</div>
+
+<div class="table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Attack Type</th><th>Source IP</th><th>Dest IP</th>
+        <th>Severity</th><th>Confidence</th><th>Status</th><th>Time</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alert in alerts %}
+      <tr>
+        <td>#{{ alert.id }}</td>
+        <td><span class="badge badge-threat">{{ alert.attack_type|upper }}</span></td>
+        <td>{{ alert.source_ip }}</td>
+        <td>{{ alert.dest_ip|default:"—" }}</td>
+        <td><span class="badge badge-{{ alert.severity }}">{{ alert.severity }}</span></td>
+        <td>{{ alert.confidence|floatformat:1 }}%</td>
+        <td>{% if alert.is_resolved %}<span class="badge badge-normal">Resolved</span>{% else %}<span class="badge badge-high">Open</span>{% endif %}</td>
+        <td>{{ alert.created_at|timesince }} ago</td>
+        <td>
+          {% if not alert.is_resolved %}
+          <form method="post" action="{% url 'resolve_alert' alert.pk %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline">Resolve</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">No alerts detected.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
