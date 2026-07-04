@@ -32,3 +32,5 @@ The project collects network traffic data from datasets such as NSL-KDD, CICIDS2
 **Expected Output:**
 The system detects and classifies cyber threats with high accuracy, generates alerts for suspicious activities, and provides security insights through an interactive dashboard.
 
+
+
