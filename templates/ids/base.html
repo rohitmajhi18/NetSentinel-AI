@@ -7,21 +7,47 @@
   <title>{% block title %}NetSentinel AI{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    }
+    const savedTheme = localStorage.getItem('netsentinel_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('netsentinel_theme', newTheme);
+      applyTheme(newTheme);
+      
+      // Reload page to re-render Chart.js colors if necessary
+      window.location.reload();
+    }
+  </script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="logo">NetSentinel AI</div>
+      <div class="logo">🛡 NetSentinel AI</div>
       <ul class="nav">
         <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>Dashboard</span></a></li>
+        <li><a href="{% url 'predict_upload' %}" class="{% if request.resolver_match.url_name == 'predict_upload' %}active{% endif %}">📤 <span>Upload Dataset</span></a></li>
+        <li><a href="{% url 'predict_result' %}" class="{% if request.resolver_match.url_name == 'predict_result' %}active{% endif %}">🔮 <span>Prediction</span></a></li>
+        <li><a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">📈 <span>Reports</span></a></li>
+        <li><a href="{% url 'dataset_history' %}" class="{% if request.resolver_match.url_name == 'dataset_history' %}active{% endif %}">🗂 <span>Dataset History</span></a></li>
         <li><a href="{% url 'monitor' %}" class="{% if request.resolver_match.url_name == 'monitor' %}active{% endif %}">📡 <span>Live Monitor</span></a></li>
         <li><a href="{% url 'alerts' %}" class="{% if request.resolver_match.url_name == 'alerts' %}active{% endif %}">🚨 <span>Alerts</span></a></li>
         <li><a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">📋 <span>Traffic Logs</span></a></li>
         <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠 <span>ML Training</span></a></li>
-        <li><a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">📈 <span>Reports</span></a></li>
+        <li><a href="{% url 'users' %}" class="{% if request.resolver_match.url_name == 'users' %}active{% endif %}">👥 <span>Users</span></a></li>
+        <li><a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a></li>
       </ul>
-      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm" style="margin-top:auto">Logout</a>
+      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
     </aside>
     <main class="main">
       {% if messages %}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Alert, ModelMetrics, TrafficLog, UserProfile
+from .models import Alert, ModelMetrics, PredictionRun, TrafficLog, UserProfile
 
 
 @admin.register(Alert)
@@ -22,3 +22,17 @@ class ModelMetricsAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "role")
+
+
+@admin.register(PredictionRun)
+class PredictionRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "input_filename",
+        "user",
+        "overall_class",
+        "confidence_score",
+        "total_records",
+        "created_at",
+    )
+    list_filter = ("overall_class", "created_at")
+    search_fields = ("input_filename", "user__username")

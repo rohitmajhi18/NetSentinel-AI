@@ -1,0 +1,31 @@
+{% extends "ids/base.html" %}
+{% block title %}Settings — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Settings</h1>
+    <p class="page-subtitle">Application preferences.</p>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom: 1.5rem;">
+  <h3>Appearance</h3>
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <p style="font-weight: 500; color: var(--text-primary);">Theme Preference</p>
+      <p style="color:var(--text-muted); font-size: 0.875rem;">Switch between light and dark themes.</p>
+    </div>
+    <button id="themeToggleBtn" class="btn btn-outline" onclick="toggleTheme()">
+      Toggle Theme
+    </button>
+  </div>
+</div>
+
+<div class="chart-card">
+  <h3>Detection model</h3>
+  <p style="color:var(--text-muted);font-size:0.875rem;margin-top:0.5rem">
+    Predictions use the trained Random Forest model stored in <code>models/ids_model.joblib</code>.
+    Retrain from <a href="{% url 'train' %}">ML Training</a> to refresh weights.
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "ids/base.html" %}
+{% load static %}
+{% block title %}Upload Dataset — NetSentinel AI{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>Upload Dataset</span>
+</nav>
+
+<div class="page-header">
+  <div>
+    <h1>Upload Dataset</h1>
+    <p class="page-subtitle">Upload network traffic CSV data for AI-based intrusion prediction.</p>
+  </div>
+  <div class="header-user">{{ user.username }}</div>
+</div>
+
+<div class="upload-panel">
+  <form id="upload-form" method="post" enctype="multipart/form-data" class="upload-form">
+    {% csrf_token %}
+    <div class="upload-dropzone">
+      <div class="upload-icon">📁</div>
+      <p class="upload-title">Drop your CSV here or browse</p>
+      <p class="upload-hint">Supported columns: Source IP, Destination IP, Protocol, Packet Length, Flow Duration, Connection State</p>
+      <input type="file" name="dataset" accept=".csv" required class="upload-input" id="dataset-file">
+      <label for="dataset-file" class="btn btn-primary">Choose CSV File</label>
+      <p class="upload-filename" id="file-name"></p>
+    </div>
+    
+    <!-- Progress UI (Hidden by default) -->
+    <div id="progress-container" style="display: none; width: 100%; margin-top: 1rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 500;">
+        <span id="progress-text">Uploading file...</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="confidence-track">
+        <div id="progress-bar" class="confidence-fill fill-success" style="width: 0%; transition: width 0.2s ease;"></div>
+      </div>
+    </div>
+    
+    <div id="error-message" class="message message-error" style="display: none; width: 100%; margin-top: 1rem;"></div>
+
+    <button type="submit" id="submit-btn" class="btn btn-primary btn-lg" style="margin-top: 0.5rem; width: 100%;">Run Prediction</button>
+  </form>
+  <p class="upload-hint" style="margin-top:1.5rem">
+    Try the sample files: 
+    <a href="{% static 'sample/network_traffic.csv' %}" download>network_traffic.csv</a> (Normal) |
+    <a href="{% static 'sample/malicious_traffic.csv' %}" download>malicious_traffic.csv</a> (Malicious)
+  </p>
+</div>
+
+<div class="table-card" style="margin-top:1.5rem">
+  <h3>CSV format</h3>
+  <table>
+    <thead>
+      <tr><th>Column</th><th>Required</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Source IP</td><td>Recommended</td><td>192.168.1.10</td></tr>
+      <tr><td>Destination IP</td><td>Recommended</td><td>172.16.0.5</td></tr>
+      <tr><td>Protocol</td><td>Yes</td><td>TCP, UDP, ICMP</td></tr>
+      <tr><td>Packet Length</td><td>Yes</td><td>512</td></tr>
+      <tr><td>Flow Duration</td><td>Yes</td><td>125</td></tr>
+      <tr><td>Connection State</td><td>Optional</td><td>SYN, SF, REJ</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const input = document.getElementById('dataset-file');
+const label = document.getElementById('file-name');
+const form = document.getElementById('upload-form');
+const progressContainer = document.getElementById('progress-container');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const progressPercent = document.getElementById('progress-percent');
+const submitBtn = document.getElementById('submit-btn');
+const errorMessage = document.getElementById('error-message');
+
+input.addEventListener('change', () => {
+  label.textContent = input.files.length ? input.files[0].name : '';
+  errorMessage.style.display = 'none';
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  if (!input.files.length) {
+    errorMessage.textContent = 'Please select a CSV file first.';
+    errorMessage.style.display = 'block';
+    return;
+  }
+  
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('dataset', file);
+  
+  // Get CSRF token
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+  // UI state for uploading
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Processing...';
+  errorMessage.style.display = 'none';
+  progressContainer.style.display = 'block';
+  progressBar.style.width = '0%';
+  progressBar.style.animation = 'none';
+  progressText.textContent = 'Uploading file...';
+  progressPercent.textContent = '0%';
+  
+  try {
+    const response = await axios.post('{% url "predict_upload" %}', formData, {
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest', // Important for our view to detect AJAX
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (percentCompleted < 100) {
+          progressBar.style.width = percentCompleted + '%';
+          progressPercent.textContent = percentCompleted + '%';
+        } else {
+          // Upload complete, now backend processing begins
+          progressBar.style.width = '100%';
+          progressPercent.textContent = '100%';
+          progressText.textContent = 'Backend processing dataset... Please wait.';
+          // Add a pulsating effect to indicate processing
+          progressBar.style.animation = 'pulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite';
+        }
+      }
+    });
+    
+    // Success, redirect to result
+    if (response.data && response.data.redirect_url) {
+      progressText.textContent = 'Analysis complete! Redirecting...';
+      progressBar.style.animation = 'none';
+      window.location.href = response.data.redirect_url;
+    }
+    
+  } catch (error) {
+    progressBar.style.animation = 'none';
+    progressContainer.style.display = 'none';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Run Prediction';
+    
+    if (error.response && error.response.data && error.response.data.error) {
+      errorMessage.textContent = error.response.data.error;
+    } else {
+      errorMessage.textContent = 'An error occurred during upload or processing.';
+    }
+    errorMessage.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

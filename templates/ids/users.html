@@ -1,0 +1,28 @@
+{% extends "ids/base.html" %}
+{% block title %}Users — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Users</h1>
+    <p class="page-subtitle">Registered accounts and roles.</p>
+  </div>
+</div>
+
+<div class="table-card">
+  <table>
+    <thead>
+      <tr><th>Username</th><th>Email</th><th>Role</th><th>Last login</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email|default:"—" }}</td>
+        <td>{% if u.profile %}{{ u.profile.get_role_display }}{% else %}—{% endif %}</td>
+        <td>{{ u.last_login|date:"Y-m-d H:i"|default:"Never" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

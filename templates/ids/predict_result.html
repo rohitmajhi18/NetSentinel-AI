@@ -1,0 +1,216 @@
+{% extends "ids/base.html" %}
+{% block title %}Prediction Result — NetSentinel AI{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="{% url 'predict_upload' %}">Prediction</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>Result</span>
+</nav>
+
+<div class="page-header">
+  <div>
+    <h1>Prediction Result</h1>
+    <p class="page-subtitle">AI-based analysis of network traffic data. View prediction results and detailed insights.</p>
+  </div>
+  <div class="header-user">{{ user.username }}</div>
+</div>
+
+<div class="prediction-top-grid">
+  <div class="prediction-summary {% if run.is_malicious %}is-malicious{% else %}is-normal{% endif %}">
+    <div class="prediction-summary-head">
+      <span class="prediction-icon" aria-hidden="true">{% if run.is_malicious %}⚠{% else %}✓{% endif %}</span>
+      <div>
+        <h2>Prediction Result: {% if run.is_malicious %}Malicious Traffic{% else %}Normal Traffic{% endif %}</h2>
+        <p>{% if run.is_malicious %}This network traffic is classified as malicious.{% else %}This network traffic appears normal.{% endif %}</p>
+      </div>
+    </div>
+    <div class="confidence-block">
+      <div class="confidence-label-row">
+        <span>Confidence Score</span>
+        <strong>{{ run.confidence_score|floatformat:1 }}%</strong>
+      </div>
+      <div class="confidence-track">
+        <div class="confidence-fill {% if run.is_malicious %}fill-danger{% else %}fill-success{% endif %}" style="width: {{ run.confidence_score }}%"></div>
+      </div>
+    </div>
+    <dl class="prediction-meta">
+      <div><dt>Prediction Class</dt><dd>{% if run.is_malicious %}Malicious{% else %}Normal{% endif %}</dd></div>
+      <div><dt>Model Used</dt><dd>{{ run.model_name }}</dd></div>
+      <div><dt>Analysis Date</dt><dd>{{ run.created_at|date:"Y-m-d h:i A" }}</dd></div>
+      <div><dt>Input File</dt><dd>{{ run.input_filename }}</dd></div>
+      <div><dt>Total Records</dt><dd>{{ run.total_records|floatformat:0 }}</dd></div>
+    </dl>
+  </div>
+
+  <div class="chart-card prediction-chart-card">
+    <h3>Prediction Confidence</h3>
+    <div class="chart-wrap chart-wrap-donut"><canvas id="confidenceDonut"></canvas></div>
+  </div>
+
+  <div class="chart-card prediction-chart-card">
+    <h3>Feature Importance</h3>
+    <div class="chart-wrap chart-wrap-bar"><canvas id="featureImportance"></canvas></div>
+  </div>
+</div>
+
+<div class="traffic-tiles">
+  <div class="traffic-tile tile-blue">
+    <span class="tile-icon">⏱</span>
+    <div>
+      <div class="tile-value">{{ traffic.flow_duration_ms }} ms</div>
+      <div class="tile-label">Flow Duration</div>
+    </div>
+  </div>
+  <div class="traffic-tile tile-green">
+    <span class="tile-icon">📦</span>
+    <div>
+      <div class="tile-value">{{ traffic.packet_length_bytes }} bytes</div>
+      <div class="tile-label">Packet Length</div>
+    </div>
+  </div>
+  <div class="traffic-tile tile-purple">
+    <span class="tile-icon">🔗</span>
+    <div>
+      <div class="tile-value">{{ traffic.protocol }}</div>
+      <div class="tile-label">Protocol</div>
+    </div>
+  </div>
+  <div class="traffic-tile tile-orange">
+    <span class="tile-icon">🌐</span>
+    <div>
+      <div class="tile-value">{{ traffic.connection_state }}</div>
+      <div class="tile-label">Connection State</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-card-head">
+    <h3>Sample Prediction Results (First 10 Records)</h3>
+    <a href="{% url 'predict_download' run.pk %}" class="btn btn-primary btn-sm">Download Results (CSV)</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Source IP</th>
+        <th>Destination IP</th>
+        <th>Protocol</th>
+        <th>Packet Length</th>
+        <th>Flow Duration</th>
+        <th>Prediction</th>
+        <th>Confidence</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in sample_rows %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ row.source_ip }}</td>
+        <td>{{ row.dest_ip }}</td>
+        <td>{{ row.protocol }}</td>
+        <td>{{ row.packet_length }}</td>
+        <td>{{ row.flow_duration }}</td>
+        <td>
+          {% if row.prediction == "Normal" %}
+          <span class="badge badge-normal">Normal</span>
+          {% else %}
+          <span class="badge badge-malicious">Malicious</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="table-confidence">
+            <span>{{ row.confidence|floatformat:1 }}%</span>
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill {% if row.prediction == 'Normal' %}fill-success{% else %}fill-danger{% endif %}" style="width: {{ row.confidence }}%"></div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="color:var(--muted)">No records in this run.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chartData = {{ charts|safe }};
+const donutCenterText = {
+  id: 'donutCenterText',
+  afterDraw(chart) {
+    const { ctx, chartArea: { width, height } } = chart;
+    ctx.save();
+    ctx.font = 'bold 18px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#F2F4F7';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(chartData.confidence_score.toFixed(1) + '%', width / 2, height / 2 - 6);
+    ctx.font = '12px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#98A2B3';
+    ctx.fillText('Confidence', width / 2, height / 2 + 14);
+    ctx.restore();
+  }
+};
+
+new Chart(document.getElementById('confidenceDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Malicious', 'Normal'],
+    datasets: [{
+      data: [chartData.malicious_percent, chartData.normal_percent],
+      backgroundColor: ['#F97066', '#32D583'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '72%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#98A2B3', padding: 16 }
+      }
+    }
+  },
+  plugins: [donutCenterText]
+});
+
+const featureColors = ['#32D583', '#53B1FD', '#FDB022', '#8B7CFF', '#53B1FD', '#F97066', '#98A2B3'];
+new Chart(document.getElementById('featureImportance'), {
+  type: 'bar',
+  data: {
+    labels: chartData.feature_labels,
+    datasets: [{
+      data: chartData.feature_values,
+      backgroundColor: featureColors,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: {
+        max: 1,
+        ticks: { color: '#98A2B3' },
+        grid: { color: '#252B33' }
+      },
+      y: {
+        ticks: { color: '#98A2B3' },
+        grid: { display: false }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

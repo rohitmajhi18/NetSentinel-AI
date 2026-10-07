@@ -1,0 +1,43 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Navigate to your project directory on the EC2 instance
+            # UPDATE THIS PATH to match where your repo is cloned on the server!
+            cd /home/${{ secrets.EC2_USERNAME }}/NetSentinel-AI
+            
+            # Pull the latest changes from GitHub
+            git pull origin main
+            
+            # Activate the virtual environment
+            # (Assumes your virtual environment is named 'venv')
+            source venv/bin/activate
+            
+            # Install pip dependencies
+            pip install -r requirements.txt
+            
+            # Run database migrations
+            python manage.py migrate
+            
+            # Kill the currently running Django server if it exists
+            # This prevents "port already in use" errors
+            pkill -f "python manage.py runserver 0.0.0.0:8000" || true
+            
+            # Start the server in the background using nohup
+            # This ensures it stays running after the SSH session disconnects
+            nohup python manage.py runserver 0.0.0.0:8000 > server.log 2>&1 &

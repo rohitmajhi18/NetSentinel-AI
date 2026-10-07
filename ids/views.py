@@ -1,19 +1,26 @@
+import csv
 import json
 from datetime import timedelta
+from io import StringIO
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
 from django.db.models import Count
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from . import capture, ml
-from .models import Alert, ModelMetrics, TrafficLog, UserProfile
+from . import ml_predict
+from .models import Alert, ModelMetrics, PredictionRun, TrafficLog, UserProfile
 
+
+def landing_view(request):
+    return render(request, "ids/landing.html")
 
 def _chart_data():
     now = timezone.now()
@@ -249,18 +256,22 @@ def train_view(request):
     return render(request, "ids/train.html", {"metrics": metrics})
 
 
-@login_required
-@require_POST
-def train_model_view(request):
+import threading
+
+def _run_training_in_background():
     try:
         result = ml.train_model(n_samples=3000)
         ModelMetrics.objects.create(**result)
-        messages.success(
-            request,
-            f"Model trained — Accuracy: {result['accuracy']:.1%}, F1: {result['f1_score']:.1%}",
-        )
     except Exception as e:
-        messages.error(request, f"Training failed: {e}")
+        print(f"Background training failed: {e}")
+
+@login_required
+@require_POST
+def train_model_view(request):
+    thread = threading.Thread(target=_run_training_in_background)
+    thread.daemon = True
+    thread.start()
+    messages.success(request, "Training started in the background. It will use both synthetic data and recorded network logs from the database.")
     return redirect("train")
 
 
@@ -287,3 +298,173 @@ def reports_view(request):
             "total_logs": TrafficLog.objects.count(),
         },
     )
+
+
+def _user_prediction_runs(user):
+    return PredictionRun.objects.filter(user=user)
+
+
+def _prediction_run_or_redirect(request, pk=None):
+    if pk is not None:
+        return get_object_or_404(_user_prediction_runs(request.user), pk=pk)
+    run = _user_prediction_runs(request.user).first()
+    if run is None:
+        messages.info(request, "Upload a dataset to run your first prediction.")
+        return redirect("predict_upload")
+    return run
+
+
+@login_required
+def predict_upload_view(request):
+    if request.method == "POST":
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.headers.get('accept') == 'application/json' or request.content_type == 'application/json' or 'axios' in request.META.get('HTTP_USER_AGENT', '').lower()
+        # Axios might not set X-Requested-With by default unless configured.
+        
+        uploaded = request.FILES.get("dataset")
+        if not uploaded:
+            if is_ajax: return JsonResponse({"error": "Please select a CSV file to upload."}, status=400)
+            messages.error(request, "Please select a CSV file to upload.")
+            return redirect("predict_upload")
+            
+        if not uploaded.name.lower().endswith(".csv"):
+            if is_ajax: return JsonResponse({"error": "Only CSV files are supported."}, status=400)
+            messages.error(request, "Only CSV files are supported.")
+            return redirect("predict_upload")
+            
+        try:
+            analysis = ml_predict.predict_dataset(uploaded)
+        except Exception as exc:
+            if is_ajax: return JsonResponse({"error": f"Could not analyze dataset: {exc}"}, status=400)
+            messages.error(request, f"Could not analyze dataset: {exc}")
+            return redirect("predict_upload")
+
+        run = PredictionRun.objects.create(
+            user=request.user,
+            input_filename=uploaded.name,
+            total_records=analysis["total_records"],
+            overall_class=analysis["overall_class"],
+            confidence_score=analysis["confidence_score"],
+            malicious_percent=analysis["malicious_percent"],
+            normal_percent=analysis["normal_percent"],
+            model_name=analysis["model_name"],
+            feature_importance=analysis["feature_importance"],
+            traffic_summary=analysis["traffic_summary"],
+            results=analysis["results"],
+        )
+        
+        # Store network logs in DB
+        traffic_logs = []
+        alerts = []
+        for row in analysis["results"]:
+            traffic_logs.append(TrafficLog(
+                source_ip=row["source_ip"],
+                dest_ip=row["dest_ip"],
+                protocol=row["protocol"],
+                duration=row["flow_duration"],
+                src_bytes=row["packet_length"],
+                prediction=row["prediction_raw"],
+                confidence=row["confidence"],
+            ))
+            
+            if row["prediction_raw"] != "normal":
+                alerts.append(Alert(
+                    attack_type=row["prediction_raw"],
+                    severity=ml.SEVERITY_MAP.get(row["prediction_raw"], "medium"),
+                    source_ip=row["source_ip"],
+                    dest_ip=row["dest_ip"],
+                    confidence=row["confidence"],
+                ))
+                
+        TrafficLog.objects.bulk_create(traffic_logs)
+        if alerts:
+            Alert.objects.bulk_create(alerts)
+        
+        if is_ajax:
+            return JsonResponse({"redirect_url": redirect("predict_result", pk=run.pk).url})
+            
+        messages.success(request, "Prediction completed successfully.")
+        return redirect("predict_result", pk=run.pk)
+
+    return render(request, "ids/predict_upload.html")
+
+
+@login_required
+def predict_result_view(request, pk=None):
+    run = _prediction_run_or_redirect(request, pk)
+    if not isinstance(run, PredictionRun):
+        return run
+
+    sample_rows = run.results[:10]
+    chart_payload = {
+        "malicious_percent": run.malicious_percent,
+        "normal_percent": run.normal_percent,
+        "confidence_score": run.confidence_score,
+        "feature_labels": [f["label"] for f in run.feature_importance],
+        "feature_values": [f["value"] for f in run.feature_importance],
+    }
+    return render(
+        request,
+        "ids/predict_result.html",
+        {
+            "run": run,
+            "sample_rows": sample_rows,
+            "charts": json.dumps(chart_payload),
+            "traffic": run.traffic_summary,
+        },
+    )
+
+
+@login_required
+def predict_download_view(request, pk):
+    run = get_object_or_404(_user_prediction_runs(request.user), pk=pk)
+    buffer = StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(
+        [
+            "source_ip",
+            "destination_ip",
+            "protocol",
+            "packet_length",
+            "flow_duration",
+            "prediction",
+            "confidence",
+        ]
+    )
+    for row in run.results:
+        writer.writerow(
+            [
+                row["source_ip"],
+                row["dest_ip"],
+                row["protocol"],
+                row["packet_length"],
+                row["flow_duration"],
+                row["prediction"],
+                row["confidence"],
+            ]
+        )
+
+    response = HttpResponse(buffer.getvalue(), content_type="text/csv")
+    safe_name = run.input_filename.rsplit(".", 1)[0]
+    response["Content-Disposition"] = f'attachment; filename="{safe_name}_predictions.csv"'
+    return response
+
+
+@login_required
+def dataset_history_view(request):
+    runs = _user_prediction_runs(request.user)
+    return render(request, "ids/dataset_history.html", {"runs": runs})
+
+
+@login_required
+def users_view(request):
+    profile = getattr(request.user, "profile", None)
+    if profile is None or profile.role != "admin":
+        messages.error(request, "Administrator access required.")
+        return redirect("dashboard")
+    users = User.objects.select_related("profile").order_by("username")
+    return render(request, "ids/users.html", {"users": users})
+
+
+@login_required
+def settings_view(request):
+    return render(request, "ids/settings.html")

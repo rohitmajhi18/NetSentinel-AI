@@ -1,0 +1,54 @@
+{% extends "ids/base.html" %}
+{% block title %}Dataset History — NetSentinel AI{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>Dataset History</span>
+</nav>
+
+<div class="page-header">
+  <div>
+    <h1>Dataset History</h1>
+    <p class="page-subtitle">Past uploads and prediction runs.</p>
+  </div>
+  <a href="{% url 'predict_upload' %}" class="btn btn-primary btn-sm">Upload New Dataset</a>
+</div>
+
+<div class="table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Records</th>
+        <th>Result</th>
+        <th>Confidence</th>
+        <th>Model</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td>{{ run.input_filename }}</td>
+        <td>{{ run.total_records }}</td>
+        <td>
+          {% if run.is_malicious %}
+          <span class="badge badge-malicious">Malicious</span>
+          {% else %}
+          <span class="badge badge-normal">Normal</span>
+          {% endif %}
+        </td>
+        <td>{{ run.confidence_score|floatformat:1 }}%</td>
+        <td>{{ run.model_name }}</td>
+        <td>{{ run.created_at|date:"Y-m-d H:i" }}</td>
+        <td><a href="{% url 'predict_result' pk=run.pk %}" class="btn btn-outline btn-sm">View</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="color:var(--muted)">No prediction runs yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

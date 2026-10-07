@@ -75,15 +75,15 @@ new Chart(document.getElementById('metricsChart'), {
     datasets: [{
       label: 'Model Performance',
       data: [{{ metrics.accuracy|floatformat:2 }}, {{ metrics.precision|floatformat:2 }}, {{ metrics.recall|floatformat:2 }}, {{ metrics.f1_score|floatformat:2 }}],
-      backgroundColor: 'rgba(6,182,212,0.2)',
-      borderColor: '#06b6d4',
-      pointBackgroundColor: '#06b6d4'
+      backgroundColor: 'rgba(139, 124, 255, 0.2)',
+      borderColor: '#8B7CFF',
+      pointBackgroundColor: '#8B7CFF'
     }]
   },
   options: {
     responsive: true, maintainAspectRatio: false,
-    scales: { r: { beginAtZero: true, max: 1, ticks: { color: '#94a3b8' }, grid: { color: '#243049' }, pointLabels: { color: '#94a3b8' } } },
-    plugins: { legend: { labels: { color: '#94a3b8' } } }
+    scales: { r: { beginAtZero: true, max: 1, ticks: { color: '#98A2B3' }, grid: { color: '#252B33' }, pointLabels: { color: '#98A2B3' } } },
+    plugins: { legend: { labels: { color: '#98A2B3' } } }
   }
 });
 </script>

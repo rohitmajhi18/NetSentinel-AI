@@ -106,6 +106,31 @@ def _encode_features(df, encoders=None):
 
 def train_model(n_samples=3000):
     df = _generate_synthetic_data(n_samples)
+    
+    try:
+        from ids.models import TrafficLog
+        db_logs = TrafficLog.objects.all()
+        if db_logs.exists():
+            db_data = []
+            for log in db_logs:
+                row = {
+                    "duration": log.duration,
+                    "protocol_type": log.protocol.lower(),
+                    "service": "other",
+                    "flag": "SF",
+                    "src_bytes": log.src_bytes,
+                    "dst_bytes": log.dst_bytes,
+                    "label": log.prediction
+                }
+                for feat in FEATURE_NAMES:
+                    if feat not in row:
+                        row[feat] = 0
+                db_data.append(row)
+            df_db = pd.DataFrame(db_data)
+            df = pd.concat([df, df_db], ignore_index=True)
+    except Exception as e:
+        print(f"Failed to load DB logs for training: {e}")
+
     df_encoded, encoders = _encode_features(df)
     X = df_encoded[FEATURE_NAMES]
     y = df_encoded["label"]
@@ -151,6 +176,11 @@ def ensure_model():
     if not MODEL_PATH.exists():
         return train_model()
     return None
+
+
+def get_model_and_encoders():
+    ensure_model()
+    return _load_model()
 
 
 def predict_traffic(features_dict):

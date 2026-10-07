@@ -68,3 +68,33 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
+
+
+class PredictionRun(models.Model):
+    CLASS_CHOICES = [
+        ("malicious", "Malicious"),
+        ("normal", "Normal"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="prediction_runs")
+    input_filename = models.CharField(max_length=255)
+    total_records = models.PositiveIntegerField(default=0)
+    overall_class = models.CharField(max_length=20, choices=CLASS_CHOICES)
+    confidence_score = models.FloatField(help_text="Dominant class percentage (0-100)")
+    malicious_percent = models.FloatField(default=0.0)
+    normal_percent = models.FloatField(default=0.0)
+    model_name = models.CharField(max_length=64, default="Random Forest")
+    feature_importance = models.JSONField(default=list)
+    traffic_summary = models.JSONField(default=dict)
+    results = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.input_filename} ({self.overall_class}) @ {self.created_at:%Y-%m-%d}"
+
+    @property
+    def is_malicious(self):
+        return self.overall_class == "malicious"
