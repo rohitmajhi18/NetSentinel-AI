@@ -16,6 +16,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          use_insecure_cipher: true
           script: |
             # Navigate to your project directory on the EC2 instance
             # UPDATE THIS PATH to match where your repo is cloned on the server!
