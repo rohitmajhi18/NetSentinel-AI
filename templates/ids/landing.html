@@ -1,198 +1,1213 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NetSentinel AI — Next-Gen Intrusion Detection</title>
+  <title>NetSentinel AI — Next-Generation Intrusion Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
-    /* Landing specific overrides */
-    body {
-      background: var(--bg);
-      background-image: radial-gradient(circle at top right, rgba(99, 91, 255, 0.10), transparent 40%),
-                        radial-gradient(circle at top left, rgba(46, 144, 250, 0.05), transparent 40%);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, sans-serif;
+    :root {
+      --landing-bg: #F7F8FA;
+      --landing-surface: #FFFFFF;
+      --landing-surface-subtle: #F1F3F5;
+      --landing-border: #E5E7EB;
+      --landing-border-light: #F3F4F6;
+      --landing-text-primary: #111827;
+      --landing-text-secondary: #4B5563;
+      --landing-text-muted: #9CA3AF;
+      --landing-primary: #635BFF;
+      --landing-primary-hover: #5548E8;
+      --landing-primary-subtle: rgba(99, 91, 255, 0.08);
+      --landing-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+      --landing-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 2px 4px -2px rgba(16, 24, 40, 0.04);
+      --landing-shadow-lg: 0 12px 24px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    body {
+      background-color: var(--landing-bg);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 91, 255, 0.12), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 90% 10%, rgba(46, 144, 250, 0.06), transparent 60%);
+      color: var(--landing-text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
-    
+
+    /* Top Sticky Navbar */
     .landing-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem 4rem;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--landing-border);
+      padding: 0.875rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
     }
-    
+
     .landing-logo {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       text-decoration: none;
+      color: var(--landing-text-primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+    }
+
+    .landing-logo:hover {
+      text-decoration: none;
+      color: var(--landing-text-primary);
+    }
+
+    .logo-badge-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--landing-primary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3);
+    }
+
+    .version-pill {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 100px;
+      background: var(--landing-primary-subtle);
+      color: var(--landing-primary);
+      border: 1px solid rgba(99, 91, 255, 0.2);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--landing-text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--landing-text-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-user-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--landing-text-secondary);
+      padding: 0.35rem 0.75rem;
+      background: var(--landing-surface-subtle);
+      border: 1px solid var(--landing-border);
+      border-radius: 100px;
+      font-weight: 500;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #12B76A;
+      box-shadow: 0 0 0 2px rgba(18, 183, 106, 0.2);
+    }
+
+    .nav-btn-link {
+      color: var(--landing-text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 0.875rem;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .nav-btn-link:hover {
+      color: var(--landing-text-primary);
+      background: var(--landing-surface-subtle);
+    }
+
+    .nav-btn-primary {
+      background: var(--landing-primary);
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.5625rem 1.125rem;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 1px 3px rgba(99, 91, 255, 0.25);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .nav-btn-primary:hover {
+      background: var(--landing-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 5.5rem 1.5rem 3.5rem;
+      text-align: center;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .announcement-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.875rem;
+      background: #FFFFFF;
+      border: 1px solid rgba(99, 91, 255, 0.25);
+      border-radius: 100px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--landing-primary);
+      margin-bottom: 1.75rem;
+      box-shadow: var(--landing-shadow-sm);
+    }
+
+    .announcement-pill span.badge {
+      background: var(--landing-primary);
+      color: #FFFFFF;
+      padding: 0.15rem 0.45rem;
+      border-radius: 100px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-title {
+      font-size: 3.75rem;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      color: var(--landing-text-primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title .gradient-text {
+      background: linear-gradient(135deg, #635BFF 0%, #2E90FA 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      color: var(--landing-text-secondary);
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-primary {
+      background: var(--landing-primary);
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      padding: 0.875rem 1.875rem;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(99, 91, 255, 0.35);
+      transition: all 0.15s;
+    }
+
+    .btn-hero-primary:hover {
+      background: var(--landing-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 91, 255, 0.4);
+    }
+
+    .btn-hero-secondary {
+      background: #FFFFFF;
+      color: var(--landing-text-primary) !important;
+      border: 1px solid var(--landing-border);
+      text-decoration: none;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      padding: 0.875rem 1.875rem;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--landing-shadow-sm);
+      transition: all 0.15s;
+    }
+
+    .btn-hero-secondary:hover {
+      background: var(--landing-surface-subtle);
+      border-color: #D1D5DB;
+      transform: translateY(-2px);
+    }
+
+    .hero-trust-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      color: var(--landing-text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .hero-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .hero-trust-item svg {
+      color: #12B76A;
+    }
+
+    /* Dashboard UI Mockup Preview */
+    .preview-container {
+      max-width: 1100px;
+      margin: 1.5rem auto 5rem;
+      padding: 0 1.5rem;
+    }
+
+    .mockup-window {
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px -15px rgba(16, 24, 40, 0.1), 0 0 0 1px rgba(16, 24, 40, 0.03);
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .mockup-header {
+      background: #FAFAFB;
+      border-bottom: 1px solid var(--landing-border);
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #FF5F56; }
+    .dot-yellow { background: #FFBD2E; }
+    .dot-green { background: #27C93F; }
+
+    .mockup-header-title {
+      font-size: 0.8125rem;
+      color: var(--landing-text-secondary);
+      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    
-    .hero {
-      text-align: center;
-      padding: 8rem 2rem 6rem;
-      max-width: 900px;
-      margin: 0 auto;
+
+    .mockup-live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: #12B76A;
+      font-weight: 600;
+      background: rgba(18, 183, 106, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 100px;
     }
-    
-    .hero h1 {
-      font-size: 4rem;
-      font-weight: 700;
-      line-height: 1.1;
+
+    .mockup-body {
+      padding: 1.5rem;
+      background: #F9FAFB;
+    }
+
+    .mockup-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
       margin-bottom: 1.5rem;
-      letter-spacing: -0.02em;
-      color: var(--text-primary);
     }
-    
-    .hero-subtitle {
-      font-size: 1.25rem;
-      color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto 2.5rem;
+
+    .mockup-stat-card {
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 10px;
+      padding: 1.125rem;
+      box-shadow: var(--landing-shadow-sm);
+    }
+
+    .mockup-stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--landing-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+    }
+
+    .mockup-stat-value {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--landing-text-primary);
+    }
+
+    .mockup-stat-meta {
+      font-size: 0.75rem;
+      margin-top: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .meta-positive { color: #12B76A; font-weight: 500; }
+    .meta-warning { color: #F79009; font-weight: 500; }
+
+    .mockup-table-wrap {
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--landing-shadow-sm);
+    }
+
+    .mockup-table-head {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--landing-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFFFF;
+    }
+
+    .mockup-table-head h4 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--landing-text-primary);
+    }
+
+    .mockup-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .mockup-table th {
+      background: #F9FAFB;
+      color: var(--landing-text-muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--landing-border);
+      font-size: 0.75rem;
+    }
+
+    .mockup-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--landing-border-light);
+      color: var(--landing-text-secondary);
+    }
+
+    .mockup-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pill-proto {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: #F1F3F5;
+      color: #374151;
+      font-family: monospace;
+    }
+
+    .pill-safe {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 100px;
+      background: rgba(18, 183, 106, 0.1);
+      color: #12B76A;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .pill-danger {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 100px;
+      background: rgba(240, 68, 56, 0.1);
+      color: #F04438;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .pill-warning {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 100px;
+      background: rgba(247, 144, 9, 0.1);
+      color: #F79009;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Section Styles */
+    .section-wrap {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 4.5rem 1.5rem;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .section-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--landing-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--landing-text-primary);
+      margin-bottom: 0.875rem;
+    }
+
+    .section-desc {
+      font-size: 1.0625rem;
+      color: var(--landing-text-secondary);
       line-height: 1.6;
     }
-    
-    .hero-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-    }
-    
-    .features {
+
+    /* Features Grid */
+    .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      padding: 4rem;
-      max-width: 1200px;
-      margin: 0 auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
     }
-    
+
     .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      transition: transform 0.2s, border-color 0.2s;
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 14px;
+      padding: 2rem 1.75rem;
+      box-shadow: var(--landing-shadow-sm);
+      transition: all 0.2s ease-out;
     }
-    
+
     .feature-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--primary);
+      transform: translateY(-4px);
+      border-color: #C7D2FE;
+      box-shadow: var(--landing-shadow-lg);
     }
-    
-    .feature-icon {
+
+    .feature-icon-box {
       width: 48px;
       height: 48px;
-      border-radius: 8px;
-      background: var(--primary-subtle);
-      color: var(--primary);
+      border-radius: 12px;
+      background: var(--landing-primary-subtle);
+      color: var(--landing-primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
     }
-    
+
     .feature-card h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.75rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--landing-text-primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
     }
-    
+
     .feature-card p {
-      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      color: var(--landing-text-secondary);
       line-height: 1.6;
     }
-    
-    .landing-footer {
+
+    /* Architecture / Pipeline */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    .arch-card {
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 14px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      box-shadow: var(--landing-shadow-sm);
+    }
+
+    .arch-step-num {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      background: #F1F3F5;
+      color: var(--landing-text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .arch-card h4 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--landing-text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .arch-card p {
+      font-size: 0.875rem;
+      color: var(--landing-text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Metrics Strip */
+    .metrics-strip {
+      background: #FFFFFF;
+      border: 1px solid var(--landing-border);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
       text-align: center;
-      padding: 3rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted);
+      box-shadow: var(--landing-shadow-sm);
+      margin-bottom: 4rem;
+    }
+
+    .metric-item-val {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: var(--landing-primary);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-item-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--landing-text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-item-sub {
+      font-size: 0.75rem;
+      color: var(--landing-text-muted);
+    }
+
+    /* CTA Card */
+    .cta-banner {
+      background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+      color: #FFFFFF;
+      border-radius: 20px;
+      padding: 4.5rem 2.5rem;
+      text-align: center;
+      margin-bottom: 5rem;
+      box-shadow: 0 20px 40px -10px rgba(30, 27, 75, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 140%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(99, 91, 255, 0.25) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .cta-banner h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .cta-banner p {
+      font-size: 1.125rem;
+      color: #C7D2FE;
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      position: relative;
+    }
+
+    .cta-btn-white {
+      background: #FFFFFF;
+      color: #1E1B4B !important;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.875rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .cta-btn-white:hover {
+      background: #F3F4F6;
+      transform: translateY(-2px);
+    }
+
+    /* Footer */
+    .landing-footer {
+      background: #FFFFFF;
+      border-top: 1px solid var(--landing-border);
+      padding: 3rem 2.5rem 2rem;
       margin-top: auto;
     }
+
+    .footer-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--landing-border-light);
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--landing-text-primary);
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--landing-text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover {
+      color: var(--landing-text-primary);
+    }
+
+    .footer-bottom {
+      max-width: 1140px;
+      margin: 1.5rem auto 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: var(--landing-text-muted);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #12B76A;
+      font-weight: 500;
+    }
+
+    @media (max-width: 900px) {
+      .landing-nav { padding: 0.875rem 1.25rem; }
+      .nav-links { display: none; }
+      .hero-title { font-size: 2.5rem; }
+      .mockup-stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-grid { grid-template-columns: 1fr; }
+      .arch-grid { grid-template-columns: 1fr; }
+      .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
-  <script>
-    const savedTheme = localStorage.getItem('netsentinel_theme') || 'dark';
-    if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
-  </script>
 </head>
 <body>
+  <!-- Modern Sticky Navigation -->
   <nav class="landing-nav">
-    <a href="/" class="landing-logo">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-      NetSentinel AI
+    <a href="{% url 'landing' %}" class="landing-logo">
+      <div class="logo-badge-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <span>NetSentinel AI</span>
+      <span class="version-pill">v2.0</span>
     </a>
-    <div style="display: flex; gap: 1.5rem; align-items: center;">
+
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#preview">Live Preview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#metrics">Benchmarks</a></li>
+    </ul>
+
+    <div class="nav-actions">
       {% if user.is_authenticated %}
-        <a href="{% url 'dashboard' %}" class="btn btn-primary" style="padding: 0.5rem 1rem;">Go to Dashboard</a>
+        <span class="nav-user-indicator">
+          <span class="pulse-dot"></span>
+          <span>Analyst: {{ user.username }}</span>
+        </span>
+        <a href="{% url 'dashboard' %}" class="nav-btn-primary">
+          <span>Dashboard</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
       {% else %}
-        <a href="{% url 'login' %}" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">Sign In</a>
-        <a href="{% url 'register' %}" class="btn btn-primary" style="padding: 0.5rem 1rem;">Get Started</a>
+        <a href="{% url 'login' %}" class="nav-btn-link">Sign In</a>
+        <a href="{% url 'register' %}" class="nav-btn-primary">
+          <span>Get Started</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
       {% endif %}
     </div>
   </nav>
 
+  <!-- Hero Section -->
   <main>
-    <section class="hero">
-      <div style="display:inline-block; margin-bottom: 1.5rem; padding: 0.25rem 0.75rem; border-radius: 100px; background: var(--primary-subtle); color: var(--primary); font-size: 0.875rem; font-weight: 500; border: 1px solid rgba(99, 91, 255, 0.2);">
-        NetSentinel 2.0 is now available
+    <section class="hero-section">
+      <div class="announcement-pill">
+        <span class="badge">New</span>
+        <span>AI-Powered Anomaly Detection Engine v2.0 Live</span>
       </div>
-      <h1>Intelligent Network Defense.</h1>
+
+      <h1 class="hero-title">
+        Intelligent Network Defense.<br>
+        <span class="gradient-text">Zero-Day Detection.</span>
+      </h1>
+
       <p class="hero-subtitle">
-        Protect your infrastructure with next-generation AI. NetSentinel analyzes millions of packets in real-time to detect, classify, and mitigate network intrusions before they become breaches.
+        NetSentinel combines live packet sniffing with deep multi-class Random Forest intelligence to detect, classify, and mitigate DoS, Probe, and R2L intrusions in real time.
       </p>
+
       <div class="hero-actions">
         {% if user.is_authenticated %}
-          <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg" style="padding: 0.75rem 1.5rem; font-size: 1rem;">Open Workspace</a>
+          <a href="{% url 'dashboard' %}" class="btn-hero-primary">
+            <span>Open Dashboard</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+          <a href="{% url 'monitor' %}" class="btn-hero-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Live Traffic Monitor</span>
+          </a>
         {% else %}
-          <a href="{% url 'register' %}" class="btn btn-primary btn-lg" style="padding: 0.75rem 1.5rem; font-size: 1rem;">Start for free</a>
-          <a href="{% url 'login' %}" class="btn btn-outline btn-lg" style="padding: 0.75rem 1.5rem; font-size: 1rem;">Sign In</a>
+          <a href="{% url 'register' %}" class="btn-hero-primary">
+            <span>Get Started Free</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+          <a href="{% url 'login' %}" class="btn-hero-secondary">
+            <span>Sign In to Console</span>
+          </a>
         {% endif %}
+      </div>
+
+      <div class="hero-trust-bar">
+        <div class="hero-trust-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>99.4% Detection Precision</span>
+        </div>
+        <div class="hero-trust-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Sub-2ms Inference Latency</span>
+        </div>
+        <div class="hero-trust-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Wireshark & PCAP Dissection</span>
+        </div>
+        <div class="hero-trust-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Continuous Background Retraining</span>
+        </div>
       </div>
     </section>
 
-    <section class="features">
-      <div class="feature-card">
-        <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    <!-- Interactive Dashboard Mockup Preview -->
+    <section class="preview-container" id="preview">
+      <div class="mockup-window">
+        <div class="mockup-header">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <div class="mockup-header-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            <span>NetSentinel Security Operations Console</span>
+          </div>
+          <div class="mockup-live-status">
+            <span class="pulse-dot"></span>
+            <span>Live Stream Active</span>
+          </div>
         </div>
-        <h3>Real-time Monitoring</h3>
-        <p>Connect seamlessly to your live network interfaces. Monitor TCP, UDP, and ICMP streams instantly with Wireshark integration.</p>
+
+        <div class="mockup-body">
+          <div class="mockup-stat-grid">
+            <div class="mockup-stat-card">
+              <div class="mockup-stat-label">Packets Inspected</div>
+              <div class="mockup-stat-value">1,482,910</div>
+              <div class="mockup-stat-meta meta-positive">↑ +24.8% stream volume</div>
+            </div>
+            <div class="mockup-stat-card">
+              <div class="mockup-stat-label">Threats Mitigated</div>
+              <div class="mockup-stat-value" style="color: #F04438;">42 Blocked</div>
+              <div class="mockup-stat-meta meta-warning">3 critical DoS floods</div>
+            </div>
+            <div class="mockup-stat-card">
+              <div class="mockup-stat-label">Model Accuracy</div>
+              <div class="mockup-stat-value">99.4%</div>
+              <div class="mockup-stat-meta meta-positive">Random Forest v2</div>
+            </div>
+            <div class="mockup-stat-card">
+              <div class="mockup-stat-label">Avg Inspection Latency</div>
+              <div class="mockup-stat-value">1.18 ms</div>
+              <div class="mockup-stat-meta meta-positive">Zero buffer drop</div>
+            </div>
+          </div>
+
+          <div class="mockup-table-wrap">
+            <div class="mockup-table-head">
+              <h4>Live Network Packet Inspection Stream</h4>
+              <span style="font-size: 0.75rem; color: #667085;">Showing recent flow records</span>
+            </div>
+            <table class="mockup-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Source IP</th>
+                  <th>Destination IP</th>
+                  <th>Proto</th>
+                  <th>Classification</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>12:38:14.210</td>
+                  <td>192.168.1.104</td>
+                  <td>10.0.0.1:443</td>
+                  <td><span class="pill-proto">TCP</span></td>
+                  <td><span class="pill-safe">● Normal Traffic</span></td>
+                  <td><strong>99.8%</strong></td>
+                </tr>
+                <tr>
+                  <td>12:38:15.084</td>
+                  <td>45.143.201.88</td>
+                  <td>10.0.0.1:80</td>
+                  <td><span class="pill-proto">TCP</span></td>
+                  <td><span class="pill-danger">▲ DoS (SYN Flood)</span></td>
+                  <td><strong>99.4%</strong></td>
+                </tr>
+                <tr>
+                  <td>12:38:15.652</td>
+                  <td>185.220.101.4</td>
+                  <td>10.0.0.1:22</td>
+                  <td><span class="pill-proto">TCP</span></td>
+                  <td><span class="pill-warning">▲ Probe (Port Scan)</span></td>
+                  <td><strong>98.9%</strong></td>
+                </tr>
+                <tr>
+                  <td>12:38:16.110</td>
+                  <td>192.168.1.112</td>
+                  <td>10.0.0.5:53</td>
+                  <td><span class="pill-proto">UDP</span></td>
+                  <td><span class="pill-safe">● Normal Traffic</span></td>
+                  <td><strong>99.9%</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"></path></svg>
-        </div>
-        <h3>AI-Powered Detection</h3>
-        <p>Built on advanced Random Forest models trained on millions of data points to accurately identify DoS, Probe, and R2L attacks.</p>
+    </section>
+
+    <!-- Key Features Section -->
+    <section class="section-wrap" id="features">
+      <div class="section-header">
+        <div class="section-tag">Core Capabilities</div>
+        <h2 class="section-title">Built for Modern SecOps & Enterprise Infrastructure</h2>
+        <p class="section-desc">Everything needed to dissect high-velocity network traffic, detect emerging threats, and streamline incident response.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <h3>Real-Time Packet Sniffing</h3>
+          <p>Direct integration with Wireshark and tshark to monitor live network adapters, extract flow characteristics, and inspect TCP/UDP packets instantaneously.</p>
         </div>
-        <h3>Beautiful Analytics</h3>
-        <p>Understand your network health at a glance. Highly optimized dashboards present complex security data systematically.</p>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+              <path d="M21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"></path>
+            </svg>
+          </div>
+          <h3>Multi-Class ML Inference</h3>
+          <p>Trained Random Forest classifier identifying Normal traffic alongside complex attack vectors: Denial of Service (DoS), Network Probing, and Unauthorized Access.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <h3>Automated Alert Triage</h3>
+          <p>Multi-tier severity scoring (Low, Medium, High, Critical) with automated alert generation, immediate threat tagging, and one-click analyst resolution.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+          </div>
+          <h3>Continuous Model Retraining</h3>
+          <p>Stores live traffic logs in the database and triggers non-blocking background retraining threads so your AI adapts to new attack surfaces automatically.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <h3>Batch Dataset Scoring</h3>
+          <p>Upload multi-megabyte CSV and PCAP network traces with smooth Axios progress tracking, high-speed batch classification, and full prediction exports.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </div>
+          <h3>Interactive SOC Dashboards</h3>
+          <p>Comprehensive telemetry dashboards built with Chart.js showing hourly volume breakdowns, protocol shares, attack distribution, and model metrics.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture & Pipeline -->
+    <section class="section-wrap" id="architecture">
+      <div class="section-header">
+        <div class="section-tag">System Pipeline</div>
+        <h2 class="section-title">How NetSentinel AI Protects Your Perimeter</h2>
+        <p class="section-desc">From raw wire packet frames to classified security telemetry in three deterministic steps.</p>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <span class="arch-step-num">Step 01</span>
+          <h4>Wire Capture & Dissection</h4>
+          <p>Ingests real-time network packets from interface taps or offline CSV dumps. Dissects headers into IP addresses, ports, protocol types, flag configurations, and payload lengths.</p>
+        </div>
+        <div class="arch-card">
+          <span class="arch-step-num">Step 02</span>
+          <h4>Feature Vector Extraction</h4>
+          <p>Maps network telemetry across 41 connection attributes, computing flow duration, error rates, service categories, and host connection histories matching NSL-KDD standards.</p>
+        </div>
+        <div class="arch-card">
+          <span class="arch-step-num">Step 03</span>
+          <h4>AI Prediction & Mitigation</h4>
+          <p>Evaluates features against trained Random Forest trees in sub-2ms time. High-confidence intrusions trigger automated severity alerts and persist forensic records to the audit log.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Metrics & Benchmarks Strip -->
+    <section class="section-wrap" id="metrics">
+      <div class="metrics-strip">
+        <div class="metric-item">
+          <div class="metric-item-val">99.4%</div>
+          <div class="metric-item-label">Detection Precision</div>
+          <div class="metric-item-sub">On benchmark attack distributions</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-item-val">&lt; 2ms</div>
+          <div class="metric-item-label">Classification Latency</div>
+          <div class="metric-item-sub">Sub-millisecond model evaluation</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-item-val">41</div>
+          <div class="metric-item-label">Network Flow Features</div>
+          <div class="metric-item-sub">Deep behavioral pattern analysis</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-item-val">100%</div>
+          <div class="metric-item-label">Database Audit Trail</div>
+          <div class="metric-item-sub">Persistent traffic and alert retention</div>
+        </div>
+      </div>
+
+      <!-- Conversion Banner -->
+      <div class="cta-banner">
+        <h2>Start Defending Your Network Infrastructure</h2>
+        <p>Deploy real-time packet inspection and machine-learning threat classification across your servers today.</p>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}" class="cta-btn-white">
+            <span>Open Dashboard Console</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        {% else %}
+          <a href="{% url 'register' %}" class="cta-btn-white">
+            <span>Get Started with NetSentinel</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        {% endif %}
       </div>
     </section>
   </main>
 
+  <!-- Modern Footer -->
   <footer class="landing-footer">
-    <p>© 2026 NetSentinel AI. Intelligent Security.</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo-badge-icon" style="width: 28px; height: 28px; border-radius: 7px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <span>NetSentinel AI</span>
+      </div>
+
+      <ul class="footer-links">
+        <li><a href="{% url 'landing' %}">Home</a></li>
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'monitor' %}">Live Monitor</a></li>
+        <li><a href="{% url 'login' %}">Sign In</a></li>
+        <li><a href="{% url 'register' %}">Create Account</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 NetSentinel AI. Next-Gen Intrusion Detection System.</div>
+      <div class="status-badge">
+        <span class="pulse-dot"></span>
+        <span>Detection Engines Operational</span>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

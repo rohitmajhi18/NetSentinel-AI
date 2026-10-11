@@ -1,38 +1,273 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register — NetSentinel AI</title>
+  <title>Create Account — NetSentinel AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    body {
+      background: #F7F8FA;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(99, 91, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(46, 144, 250, 0.05) 0%, transparent 50%);
+      color: #111827;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
+
+    .auth-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .auth-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.625rem;
+      text-decoration: none;
+      color: #111827;
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      transition: opacity 0.2s;
+    }
+
+    .auth-brand:hover {
+      opacity: 0.85;
+      text-decoration: none;
+      color: #111827;
+    }
+
+    .auth-brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #635BFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25);
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 440px;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 10px 25px -5px rgba(16, 24, 40, 0.06), 0 4px 6px -2px rgba(16, 24, 40, 0.02);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .auth-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+    }
+
+    .auth-header p {
+      font-size: 0.875rem;
+      color: #667085;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .auth-form .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-form label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.375rem;
+    }
+
+    .auth-form input[type="text"],
+    .auth-form input[type="password"] {
+      width: 100%;
+      padding: 0.6875rem 0.875rem;
+      background: #FFFFFF;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      color: #111827;
+      font-family: inherit;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .auth-form input:focus {
+      outline: none;
+      border-color: #635BFF;
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15);
+    }
+
+    .auth-form .btn-submit {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #635BFF;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 0.5rem;
+    }
+
+    .auth-form .btn-submit:hover {
+      background: #5548E8;
+    }
+
+    .auth-form .btn-submit:active {
+      transform: translateY(1px);
+    }
+
+    .auth-alert-error {
+      background: #FEF3F2;
+      border: 1px solid #FECDCA;
+      color: #B42318;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-alert-error ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #F1F3F5;
+      font-size: 0.875rem;
+      color: #667085;
+    }
+
+    .auth-footer a {
+      color: #635BFF;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .auth-back {
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: #667085;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: color 0.15s;
+    }
+
+    .auth-back:hover {
+      color: #111827;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="auth-page">
-    <div class="auth-card">
-      <h1>NetSentinel AI</h1>
-      <p class="sub">Create your security analyst account</p>
+  <div class="auth-container">
+    <a href="{% url 'landing' %}" class="auth-brand">
+      <div class="auth-brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <span>NetSentinel AI</span>
+    </a>
+
+    <div class="auth-box">
+      <div class="auth-header">
+        <h1>Create an account</h1>
+        <p>Set up your security analyst profile</p>
+      </div>
+
       {% if form.errors %}
-      <div class="message message-error">{{ form.errors }}</div>
+      <div class="auth-alert-error">
+        {% for field in form %}
+          {% for error in field.errors %}
+            <div>• {{ error }}</div>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <div>• {{ error }}</div>
+        {% endfor %}
+      </div>
       {% endif %}
-      <form method="post">
+
+      <form method="post" class="auth-form">
         {% csrf_token %}
         <div class="form-group">
-          <label>Username</label>
-          <input type="text" name="username" required maxlength="150">
+          <label for="id_username">Username</label>
+          <input type="text" name="username" id="id_username" placeholder="e.g. analyst1" required maxlength="150" autocomplete="username">
         </div>
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" name="password1" required>
+          <label for="id_password1">Password</label>
+          <input type="password" name="password1" id="id_password1" placeholder="At least 8 characters" required autocomplete="new-password">
         </div>
         <div class="form-group">
-          <label>Confirm Password</label>
-          <input type="password" name="password2" required>
+          <label for="id_password2">Confirm Password</label>
+          <input type="password" name="password2" id="id_password2" placeholder="Re-enter password" required autocomplete="new-password">
         </div>
-        <button type="submit" class="btn btn-primary">Create Account</button>
+        <button type="submit" class="btn-submit">
+          <span>Get Started</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
       </form>
-      <div class="auth-footer">Already have an account? <a href="{% url 'login' %}">Sign In</a></div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="{% url 'login' %}">Sign In</a>
+      </div>
     </div>
+
+    <a href="{% url 'landing' %}" class="auth-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      <span>Back to NetSentinel</span>
+    </a>
   </div>
 </body>
 </html>
