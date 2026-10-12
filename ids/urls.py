@@ -25,4 +25,7 @@ urlpatterns = [
     path("dataset-history/", views.dataset_history_view, name="dataset_history"),
     path("users/", views.users_view, name="users"),
     path("settings/", views.settings_view, name="settings"),
+    path("test-results/", views.test_results_view, name="test_results"),
+    path("api/run-tests/", views.run_tests_api, name="run_tests_api"),
+    path("test-results/download/", views.download_test_report, name="download_test_report"),
 ]

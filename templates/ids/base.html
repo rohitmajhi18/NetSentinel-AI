@@ -45,9 +45,14 @@
         <li><a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">📋 <span>Traffic Logs</span></a></li>
         <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠 <span>ML Training</span></a></li>
         <li><a href="{% url 'users' %}" class="{% if request.resolver_match.url_name == 'users' %}active{% endif %}">👥 <span>Users</span></a></li>
+        <li><a href="{% url 'test_results' %}" class="{% if request.resolver_match.url_name == 'test_results' %}active{% endif %}">🧪 <span>Test Results</span></a></li>
         <li><a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a></li>
       </ul>
-      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline btn-sm sidebar-logout">Login</a>
+      {% endif %}
     </aside>
     <main class="main">
       {% if messages %}

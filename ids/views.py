@@ -3,6 +3,7 @@ import json
 from datetime import timedelta
 from io import StringIO
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -16,6 +17,7 @@ from django.views.decorators.http import require_POST
 
 from . import capture, ml
 from . import ml_predict
+from . import test_runner
 from .models import Alert, ModelMetrics, PredictionRun, TrafficLog, UserProfile
 
 
@@ -468,3 +470,35 @@ def users_view(request):
 @login_required
 def settings_view(request):
     return render(request, "ids/settings.html")
+
+
+def test_results_view(request):
+    data = test_runner.run_live_test_suite()
+    return render(
+        request,
+        "ids/testcase_results.html",
+        {
+            "suite": data,
+            "testcases": data["testcases"],
+            "summary": data["summary"],
+            "build": data["build"],
+            "execution_date": data["execution_date"],
+            "elapsed_seconds": data["elapsed_seconds"],
+        },
+    )
+
+
+def run_tests_api(request):
+    data = test_runner.run_live_test_suite()
+    return JsonResponse(data)
+
+
+def download_test_report(request):
+    report_path = settings.BASE_DIR / "testcase-result.antigravity.md"
+    if report_path.exists():
+        content = report_path.read_text(encoding="utf-8")
+    else:
+        content = "# Test Results\nNo report file found."
+    response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="NetSentinel_TestCase_Results.md"'
+    return response
