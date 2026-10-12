@@ -38,9 +38,7 @@
       <div class="logo">🛡 NetSentinel AI</div>
       <ul class="nav">
         <li><a href="{% url 'dashboard' %}"
-            class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>{% if
-              user.is_superuser or user.profile.role == 'admin' %}Admin Overview{% else %}My Workspace{% endif
-              %}</span></a></li>
+            class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>{% if user.is_superuser or user.profile.role == 'admin' %}Admin Overview{% else %}My Workspace{% endif %}</span></a></li>
         <li><a href="{% url 'predict_upload' %}"
             class="{% if request.resolver_match.url_name == 'predict_upload' %}active{% endif %}">📤 <span>Upload
               Dataset</span></a></li>
