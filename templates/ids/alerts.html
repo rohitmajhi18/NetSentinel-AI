@@ -14,7 +14,7 @@
   <table>
     <thead>
       <tr>
-        <th>ID</th><th>Attack Type</th><th>Source IP</th><th>Dest IP</th>
+        <th>ID</th>{% if user.is_superuser or user.profile.role == "admin" %}<th>Account</th>{% endif %}<th>Attack Type</th><th>Source IP</th><th>Dest IP</th>
         <th>Severity</th><th>Confidence</th><th>Status</th><th>Time</th><th>Action</th>
       </tr>
     </thead>
@@ -22,6 +22,7 @@
       {% for alert in alerts %}
       <tr>
         <td>#{{ alert.id }}</td>
+        {% if user.is_superuser or user.profile.role == "admin" %}<td>{{ alert.user.username|default:"Unassigned" }}</td>{% endif %}
         <td><span class="badge badge-threat">{{ alert.attack_type|upper }}</span></td>
         <td>{{ alert.source_ip }}</td>
         <td>{{ alert.dest_ip|default:"—" }}</td>
@@ -39,7 +40,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">No alerts detected.</td></tr>
+      <tr><td colspan="10" style="color:var(--muted);text-align:center;padding:2rem">No alerts detected.</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -10,13 +10,14 @@
   <table>
     <thead>
       <tr>
-        <th>Source IP</th><th>Dest IP</th><th>Protocol</th>
+        {% if user.is_superuser or user.profile.role == "admin" %}<th>Account</th>{% endif %}<th>Source IP</th><th>Dest IP</th><th>Protocol</th>
         <th>Duration</th><th>Bytes</th><th>Prediction</th><th>Confidence</th><th>Time</th>
       </tr>
     </thead>
     <tbody>
       {% for log in logs %}
       <tr>
+        {% if user.is_superuser or user.profile.role == "admin" %}<td>{{ log.user.username|default:"Unassigned" }}</td>{% endif %}
         <td>{{ log.source_ip }}</td>
         <td>{{ log.dest_ip }}</td>
         <td>{{ log.protocol }}</td>
@@ -33,7 +34,7 @@
         <td>{{ log.created_at|timesince }} ago</td>
       </tr>
       {% empty %}
-      <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:2rem">No traffic logs. Run setup or start monitoring.</td></tr>
+      <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:2rem">No traffic logs. Run setup or start monitoring.</td></tr>
       {% endfor %}
     </tbody>
   </table>

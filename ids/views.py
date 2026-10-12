@@ -22,12 +22,23 @@ from .models import Alert, ModelMetrics, PredictionRun, TrafficLog, UserProfile
 def landing_view(request):
     return render(request, "ids/landing.html")
 
-def _chart_data():
+
+def _is_admin(user):
+    return user.is_superuser or getattr(getattr(user, "profile", None), "role", None) == "admin"
+
+
+def _owned(queryset, user):
+    return queryset if _is_admin(user) else queryset.filter(user=user)
+
+
+def _chart_data(user):
     now = timezone.now()
     since = now - timedelta(hours=24)
+    alerts = _owned(Alert.objects.all(), user)
+    logs = _owned(TrafficLog.objects.all(), user)
 
     attack_counts = (
-        Alert.objects.filter(created_at__gte=since)
+        alerts.filter(created_at__gte=since)
         .values("attack_type")
         .annotate(count=Count("id"))
         .order_by("-count")
@@ -41,13 +52,13 @@ def _chart_data():
     for i in range(23, -1, -1):
         h_start = now - timedelta(hours=i + 1)
         h_end = now - timedelta(hours=i)
-        logs = TrafficLog.objects.filter(created_at__gte=h_start, created_at__lt=h_end)
+        hour_logs = logs.filter(created_at__gte=h_start, created_at__lt=h_end)
         hours.append(h_start.strftime("%H:00"))
-        normal_counts.append(logs.filter(prediction="normal").count())
-        threat_counts.append(logs.exclude(prediction="normal").count())
+        normal_counts.append(hour_logs.filter(prediction="normal").count())
+        threat_counts.append(hour_logs.exclude(prediction="normal").count())
 
     severity_counts = (
-        Alert.objects.filter(created_at__gte=since)
+        alerts.filter(created_at__gte=since)
         .values("severity")
         .annotate(count=Count("id"))
     )
@@ -56,7 +67,7 @@ def _chart_data():
     severity_values = [sev_map.get(s, 0) for s in severity_labels]
 
     traffic_by_protocol = (
-        TrafficLog.objects.filter(created_at__gte=since)
+        logs.filter(created_at__gte=since)
         .values("protocol")
         .annotate(count=Count("id"))
     )
@@ -75,9 +86,9 @@ def _chart_data():
         "severity_values": severity_values,
         "proto_labels": proto_labels,
         "proto_values": proto_values,
-        "total_alerts": Alert.objects.filter(is_resolved=False).count(),
-        "total_logs": TrafficLog.objects.count(),
-        "threats_today": Alert.objects.filter(created_at__gte=since).count(),
+        "total_alerts": alerts.filter(is_resolved=False).count(),
+        "total_logs": logs.count(),
+        "threats_today": alerts.filter(created_at__gte=since).count(),
         "model_accuracy": round(latest_metrics.accuracy * 100, 1) if latest_metrics else 0,
     }
 
@@ -98,7 +109,7 @@ def register_view(request):
     form = UserCreationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        UserProfile.objects.create(user=user, role="analyst")
+        UserProfile.objects.create(user=user, role="researcher")
         login(request, user)
         messages.success(request, "Account created. Welcome to NetSentinel AI.")
         return redirect("dashboard")
@@ -112,24 +123,55 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    data = _chart_data()
-    recent_alerts = Alert.objects.all()[:8]
-    recent_logs = TrafficLog.objects.all()[:8]
+    data = _chart_data(request.user)
+    recent_alerts = _owned(Alert.objects.all(), request.user)[:8]
+    recent_logs = _owned(TrafficLog.objects.all(), request.user)[:8]
+    if _is_admin(request.user):
+        users = User.objects.all().order_by("username")
+        user_activity = [
+            {
+                "username": account.username,
+                "role": "Administrator" if account.is_superuser else getattr(getattr(account, "profile", None), "get_role_display", lambda: "Researcher")(),
+                "alerts": Alert.objects.filter(user=account).count(),
+                "logs": TrafficLog.objects.filter(user=account).count(),
+                "runs": PredictionRun.objects.filter(user=account).count(),
+            }
+            for account in users
+        ]
+        return render(
+            request,
+            "ids/admin_dashboard.html",
+            {
+                "charts": json.dumps(data),
+                "user_activity": user_activity,
+                "recent_alerts": recent_alerts,
+                "recent_logs": recent_logs,
+                **data,
+            },
+        )
+
+    recent_runs = _user_prediction_runs(request.user)[:5]
     return render(
         request,
-        "ids/dashboard.html",
-        {"charts": json.dumps(data), "recent_alerts": recent_alerts, "recent_logs": recent_logs, **data},
+        "ids/researcher_dashboard.html",
+        {
+            "charts": json.dumps(data),
+            "recent_alerts": recent_alerts,
+            "recent_logs": recent_logs,
+            "recent_runs": recent_runs,
+            **data,
+        },
     )
 
 
 @login_required
 def chart_api(request):
-    return JsonResponse(_chart_data())
+    return JsonResponse(_chart_data(request.user))
 
 
 @login_required
 def alerts_view(request):
-    alerts = Alert.objects.all()
+    alerts = _owned(Alert.objects.all(), request.user)
     severity = request.GET.get("severity")
     if severity:
         alerts = alerts.filter(severity=severity)
@@ -139,7 +181,7 @@ def alerts_view(request):
 @login_required
 @require_POST
 def resolve_alert(request, pk):
-    alert = get_object_or_404(Alert, pk=pk)
+    alert = get_object_or_404(_owned(Alert.objects.all(), request.user), pk=pk)
     alert.is_resolved = True
     alert.save()
     messages.success(request, f"Alert #{pk} marked as resolved.")
@@ -148,7 +190,7 @@ def resolve_alert(request, pk):
 
 @login_required
 def logs_view(request):
-    logs = TrafficLog.objects.all()[:200]
+    logs = _owned(TrafficLog.objects.all(), request.user)[:200]
     return render(request, "ids/logs.html", {"logs": logs})
 
 
@@ -167,7 +209,7 @@ def monitor_view(request):
     )
 
 
-def _analyze_packet(source_ip, dest_ip, protocol, features):
+def _analyze_packet(source_ip, dest_ip, protocol, features, user):
     prediction, confidence = ml.predict_traffic(features)
     conf_pct = round(confidence * 100, 1)
 
@@ -180,6 +222,7 @@ def _analyze_packet(source_ip, dest_ip, protocol, features):
         dst_bytes=int(features.get("dst_bytes", 0)),
         prediction=prediction,
         confidence=conf_pct,
+        user=user,
     )
 
     if prediction != "normal":
@@ -189,6 +232,7 @@ def _analyze_packet(source_ip, dest_ip, protocol, features):
             source_ip=source_ip,
             dest_ip=dest_ip,
             confidence=conf_pct,
+            user=user,
         )
 
     return {
@@ -225,6 +269,7 @@ def capture_traffic(request):
                 pkt["dest_ip"],
                 pkt.get("protocol", "TCP"),
                 features,
+                request.user,
             )
         )
 
@@ -246,7 +291,7 @@ def simulate_traffic(request):
     """Fallback simulator when Wireshark capture is unavailable."""
     features, src_ip, dst_ip = ml.random_traffic_sample()
     protocol = features.get("protocol_type", "tcp").upper()
-    item = _analyze_packet(src_ip, dst_ip, protocol, features)
+    item = _analyze_packet(src_ip, dst_ip, protocol, features, request.user)
     return JsonResponse(item)
 
 
@@ -278,14 +323,16 @@ def train_model_view(request):
 @login_required
 def reports_view(request):
     since = timezone.now() - timedelta(days=7)
+    alerts = _owned(Alert.objects.all(), request.user)
+    logs = _owned(TrafficLog.objects.all(), request.user)
     alerts_by_type = (
-        Alert.objects.filter(created_at__gte=since)
+        alerts.filter(created_at__gte=since)
         .values("attack_type")
         .annotate(count=Count("id"))
         .order_by("-count")
     )
-    resolved = Alert.objects.filter(is_resolved=True).count()
-    unresolved = Alert.objects.filter(is_resolved=False).count()
+    resolved = alerts.filter(is_resolved=True).count()
+    unresolved = alerts.filter(is_resolved=False).count()
     metrics = ModelMetrics.objects.first()
     return render(
         request,
@@ -295,13 +342,14 @@ def reports_view(request):
             "resolved": resolved,
             "unresolved": unresolved,
             "metrics": metrics,
-            "total_logs": TrafficLog.objects.count(),
+            "total_logs": logs.count(),
         },
     )
 
 
 def _user_prediction_runs(user):
-    return PredictionRun.objects.filter(user=user)
+    runs = PredictionRun.objects.all()
+    return runs if _is_admin(user) else runs.filter(user=user)
 
 
 def _prediction_run_or_redirect(request, pk=None):
@@ -364,6 +412,7 @@ def predict_upload_view(request):
                 src_bytes=row["packet_length"],
                 prediction=row["prediction_raw"],
                 confidence=row["confidence"],
+                user=request.user,
             ))
             
             if row["prediction_raw"] != "normal":
@@ -373,6 +422,7 @@ def predict_upload_view(request):
                     source_ip=row["source_ip"],
                     dest_ip=row["dest_ip"],
                     confidence=row["confidence"],
+                    user=request.user,
                 ))
                 
         TrafficLog.objects.bulk_create(traffic_logs)
@@ -457,10 +507,29 @@ def dataset_history_view(request):
 
 @login_required
 def users_view(request):
-    profile = getattr(request.user, "profile", None)
-    if profile is None or profile.role != "admin":
-        messages.error(request, "Administrator access required.")
-        return redirect("dashboard")
+    if request.method == "POST":
+        target = get_object_or_404(User.objects.select_related("profile"), pk=request.POST.get("user_id"))
+        new_role = request.POST.get("role")
+        if new_role not in dict(UserProfile.ROLE_CHOICES):
+            messages.error(request, "Choose a valid account role.")
+            return redirect("users")
+        target_profile = getattr(target, "profile", None)
+        current_role = "admin" if target.is_superuser else getattr(target_profile, "role", "researcher")
+        if target.is_superuser and new_role != "admin":
+            messages.error(request, "A superuser account must retain the administrator role.")
+            return redirect("users")
+        if current_role == "admin" and new_role != "admin":
+            other_admin_exists = (
+                UserProfile.objects.filter(role="admin").exclude(user=target).exists()
+                or User.objects.filter(is_superuser=True).exclude(pk=target.pk).exists()
+            )
+            if not other_admin_exists:
+                messages.error(request, "The last administrator cannot be demoted.")
+                return redirect("users")
+        UserProfile.objects.update_or_create(user=target, defaults={"role": new_role})
+        messages.success(request, f"{target.username}'s role was updated to {dict(UserProfile.ROLE_CHOICES)[new_role]}.")
+        return redirect("dashboard" if target == request.user and new_role != "admin" else "users")
+
     users = User.objects.select_related("profile").order_by("username")
     return render(request, "ids/users.html", {"users": users})
 

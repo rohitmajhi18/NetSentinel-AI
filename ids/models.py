@@ -16,6 +16,7 @@ class Alert(models.Model):
     confidence = models.FloatField(default=0.0)
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="security_alerts")
 
     class Meta:
         ordering = ["-created_at"]
@@ -34,6 +35,7 @@ class TrafficLog(models.Model):
     prediction = models.CharField(max_length=50, default="normal")
     confidence = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="traffic_logs")
 
     class Meta:
         ordering = ["-created_at"]
@@ -60,11 +62,10 @@ class ModelMetrics(models.Model):
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ("admin", "Administrator"),
-        ("analyst", "Security Analyst"),
-        ("viewer", "Viewer"),
+        ("researcher", "Researcher"),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="analyst")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="researcher")
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"

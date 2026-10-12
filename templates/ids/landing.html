@@ -838,7 +838,7 @@
       {% if user.is_authenticated %}
         <span class="nav-user-indicator">
           <span class="pulse-dot"></span>
-          <span>Analyst: {{ user.username }}</span>
+          <span>{{ user.profile.get_role_display|default:"Administrator" }}: {{ user.username }}</span>
         </span>
         <a href="{% url 'dashboard' %}" class="nav-btn-primary">
           <span>Dashboard</span>

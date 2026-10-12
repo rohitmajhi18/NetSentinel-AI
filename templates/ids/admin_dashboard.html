@@ -1,0 +1,49 @@
+{% extends "ids/base.html" %}
+{% block title %}Administration Overview — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Administration Overview</h1>
+    <p class="page-subtitle">Organization-wide detection activity across every account.</p>
+  </div>
+  <a class="btn btn-outline" href="{% url 'users' %}">Manage users</a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-label">Unresolved Alerts</div><div class="stat-value danger">{{ total_alerts }}</div></div>
+  <div class="stat-card"><div class="stat-label">Threats (24h)</div><div class="stat-value warning">{{ threats_today }}</div></div>
+  <div class="stat-card"><div class="stat-label">All Traffic Logs</div><div class="stat-value">{{ total_logs }}</div></div>
+  <div class="stat-card"><div class="stat-label">Model Accuracy</div><div class="stat-value success">{{ model_accuracy }}%</div></div>
+</div>
+
+<div class="table-card" style="margin-top:1.5rem">
+  <h3>Account Activity</h3>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Account</th><th>Role</th><th>Alerts</th><th>Traffic logs</th><th>Prediction runs</th></tr></thead>
+      <tbody>
+        {% for account in user_activity %}
+        <tr><td>{{ account.username }}</td><td>{{ account.role }}</td><td>{{ account.alerts }}</td><td>{{ account.logs }}</td><td>{{ account.runs }}</td></tr>
+        {% empty %}<tr><td colspan="5">No accounts found.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="charts-grid" style="margin-top:1.5rem">
+  <div class="table-card">
+    <h3>Latest Organization Alerts</h3>
+    <table>
+      <thead><tr><th>Account</th><th>Type</th><th>Source</th><th>Severity</th></tr></thead>
+      <tbody>{% for alert in recent_alerts %}<tr><td>{{ alert.user.username|default:"Unassigned" }}</td><td>{{ alert.attack_type|upper }}</td><td>{{ alert.source_ip }}</td><td>{{ alert.severity|title }}</td></tr>{% empty %}<tr><td colspan="4">No alerts recorded.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <div class="table-card">
+    <h3>Latest Organization Traffic</h3>
+    <table>
+      <thead><tr><th>Account</th><th>Source</th><th>Destination</th><th>Prediction</th></tr></thead>
+      <tbody>{% for log in recent_logs %}<tr><td>{{ log.user.username|default:"Unassigned" }}</td><td>{{ log.source_ip }}</td><td>{{ log.dest_ip }}</td><td>{{ log.prediction|upper }}</td></tr>{% empty %}<tr><td colspan="4">No traffic recorded.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
