@@ -215,7 +215,7 @@
     <div class="auth-box">
       <div class="auth-header">
         <h1>Welcome back</h1>
-        <p>Sign in to your security analyst workspace</p>
+        <p>Sign in to your NetSentinel workspace</p>
       </div>
 
       {% if form.errors %}
@@ -233,7 +233,7 @@
         {% csrf_token %}
         <div class="form-group">
           <label for="id_username">Username</label>
-          <input type="text" name="username" id="id_username" placeholder="e.g. analyst" autofocus required autocomplete="username">
+          <input type="text" name="username" id="id_username" placeholder="Your username" autofocus required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="id_password">Password</label>

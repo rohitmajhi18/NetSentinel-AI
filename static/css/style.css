@@ -521,6 +521,17 @@ tr:hover td { background: var(--surface-subtle); color: var(--text-primary); }
 .breadcrumb-sep { color: var(--border); }
 
 .sidebar-logout { margin-top: auto; }
+.sidebar-role {
+  margin: 12px 12px 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.role-form { display: flex; align-items: center; gap: 8px; min-width: 210px; }
+.role-form select { min-width: 130px; padding: 7px 9px; }
+.role-form button:disabled, .role-form select:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .table-confidence {
   display: flex;
@@ -553,6 +564,7 @@ tr:hover td { background: var(--surface-subtle); color: var(--text-primary); }
   .sidebar .logo { padding: 0 4px; font-size: 0; }
   .sidebar .logo::before { content: "🛡"; font-size: 16px; }
   .nav a span { display: none; }
+  .sidebar-role { display: none; }
   .main { margin-left: 60px; padding: 16px; }
   .charts-grid { grid-template-columns: 1fr; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }

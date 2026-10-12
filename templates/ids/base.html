@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,36 +24,58 @@
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       localStorage.setItem('netsentinel_theme', newTheme);
       applyTheme(newTheme);
-      
+
       // Reload page to re-render Chart.js colors if necessary
       window.location.reload();
     }
   </script>
   {% block extra_head %}{% endblock %}
 </head>
+
 <body>
   <div class="layout">
     <aside class="sidebar">
       <div class="logo">🛡 NetSentinel AI</div>
       <ul class="nav">
-        <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>Dashboard</span></a></li>
-        <li><a href="{% url 'predict_upload' %}" class="{% if request.resolver_match.url_name == 'predict_upload' %}active{% endif %}">📤 <span>Upload Dataset</span></a></li>
-        <li><a href="{% url 'predict_result' %}" class="{% if request.resolver_match.url_name == 'predict_result' %}active{% endif %}">🔮 <span>Prediction</span></a></li>
-        <li><a href="{% url 'reports' %}" class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">📈 <span>Reports</span></a></li>
-        <li><a href="{% url 'dataset_history' %}" class="{% if request.resolver_match.url_name == 'dataset_history' %}active{% endif %}">🗂 <span>Dataset History</span></a></li>
-        <li><a href="{% url 'monitor' %}" class="{% if request.resolver_match.url_name == 'monitor' %}active{% endif %}">📡 <span>Live Monitor</span></a></li>
-        <li><a href="{% url 'alerts' %}" class="{% if request.resolver_match.url_name == 'alerts' %}active{% endif %}">🚨 <span>Alerts</span></a></li>
-        <li><a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">📋 <span>Traffic Logs</span></a></li>
-        <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠 <span>ML Training</span></a></li>
-        <li><a href="{% url 'users' %}" class="{% if request.resolver_match.url_name == 'users' %}active{% endif %}">👥 <span>Users</span></a></li>
-        <li><a href="{% url 'test_results' %}" class="{% if request.resolver_match.url_name == 'test_results' %}active{% endif %}">🧪 <span>Test Results</span></a></li>
-        <li><a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a></li>
+        <li><a href="{% url 'dashboard' %}"
+            class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 <span>{% if
+              user.is_superuser or user.profile.role == 'admin' %}Admin Overview{% else %}My Workspace{% endif
+              %}</span></a></li>
+        <li><a href="{% url 'predict_upload' %}"
+            class="{% if request.resolver_match.url_name == 'predict_upload' %}active{% endif %}">📤 <span>Upload
+              Dataset</span></a></li>
+        <li><a href="{% url 'predict_result' %}"
+            class="{% if request.resolver_match.url_name == 'predict_result' %}active{% endif %}">🔮
+            <span>Prediction</span></a></li>
+        <li><a href="{% url 'reports' %}"
+            class="{% if request.resolver_match.url_name == 'reports' %}active{% endif %}">📈 <span>Reports</span></a>
+        </li>
+        <li><a href="{% url 'dataset_history' %}"
+            class="{% if request.resolver_match.url_name == 'dataset_history' %}active{% endif %}">🗂 <span>Dataset
+              History</span></a></li>
+        <li><a href="{% url 'monitor' %}"
+            class="{% if request.resolver_match.url_name == 'monitor' %}active{% endif %}">📡 <span>Live
+              Monitor</span></a></li>
+        <li><a href="{% url 'alerts' %}"
+            class="{% if request.resolver_match.url_name == 'alerts' %}active{% endif %}">🚨 <span>Alerts</span></a>
+        </li>
+        <li><a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">📋
+            <span>Traffic Logs</span></a></li>
+        <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠
+            <span>ML Training</span></a></li>
+        {% if user.is_superuser or user.profile.role == 'admin' %}
+        <li><a href="{% url 'users' %}" class="{% if request.resolver_match.url_name == 'users' %}active{% endif %}">👥
+            <span>Users</span></a></li>
+        <li><a href="{% url 'test_results' %}"
+            class="{% if request.resolver_match.url_name == 'test_results' %}active{% endif %}">🧪 <span>Test
+              Results</span></a></li>
+        <li><a href="{% url 'settings' %}"
+            class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a>
+        </li>
+        {% endif %}
       </ul>
-      {% if user.is_authenticated %}
-        <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
-      {% else %}
-        <a href="{% url 'login' %}" class="btn btn-outline btn-sm sidebar-logout">Login</a>
-      {% endif %}
+      <div class="sidebar-role">{{ user.profile.get_role_display|default:"Administrator" }}</div>
+      <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
     </aside>
     <main class="main">
       {% if messages %}
@@ -67,4 +90,5 @@
   </div>
   {% block scripts %}{% endblock %}
 </body>
+
 </html>

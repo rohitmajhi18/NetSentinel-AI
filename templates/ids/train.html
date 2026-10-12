@@ -3,10 +3,12 @@
 {% block content %}
 <div class="topbar">
   <h1>Model Training & Evaluation</h1>
+  {% if user.is_superuser or user.profile.role == "admin" %}
   <form method="post" action="{% url 'train_model' %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary">🔄 Retrain Model</button>
   </form>
+  {% endif %}
 </div>
 
 <div class="chart-card" style="margin-bottom:1.5rem">
@@ -15,7 +17,7 @@
     NetSentinel uses a Random Forest classifier trained on NSL-KDD-style network features.
     It classifies traffic as: <strong>normal</strong>, <strong>DoS</strong>, <strong>Probe</strong>,
     <strong>R2L</strong>, <strong>U2R</strong>, or <strong>brute_force</strong>.
-    Click "Retrain Model" to train on 3,000 synthetic samples.
+    {% if user.is_superuser or user.profile.role == "admin" %}Administrators can retrain the shared model on 3,000 synthetic samples.{% else %}Model training is managed by an administrator. You can view the current shared model statistics below.{% endif %}
   </p>
 </div>
 
@@ -57,10 +59,14 @@
 {% else %}
 <div class="monitor-panel" style="text-align:center;padding:3rem">
   <p style="color:var(--muted);margin-bottom:1rem">No model trained yet.</p>
+  {% if user.is_superuser or user.profile.role == "admin" %}
   <form method="post" action="{% url 'train_model' %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary">Train Initial Model</button>
   </form>
+  {% else %}
+  <p style="color:var(--muted)">An administrator must train the initial model.</p>
+  {% endif %}
 </div>
 {% endif %}
 {% endblock %}

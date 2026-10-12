@@ -1,0 +1,54 @@
+{% extends "ids/base.html" %}
+{% block title %}Research Workspace — NetSentinel AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Research Workspace</h1>
+    <p class="page-subtitle">Your monitored traffic, alerts, and dataset analyses.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'predict_upload' %}">Analyze dataset</a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-label">Your Open Alerts</div><div class="stat-value danger">{{ total_alerts }}</div></div>
+  <div class="stat-card"><div class="stat-label">Your Threats (24h)</div><div class="stat-value warning">{{ threats_today }}</div></div>
+  <div class="stat-card"><div class="stat-label">Your Traffic Records</div><div class="stat-value">{{ total_logs }}</div></div>
+  <div class="stat-card"><div class="stat-label">Current Model Accuracy</div><div class="stat-value success">{{ model_accuracy }}%</div></div>
+</div>
+
+<div class="chart-card" style="margin-top:1.5rem">
+  <div class="page-header" style="margin-bottom:0">
+    <div><h2>Your Dataset Analyses</h2><p class="page-subtitle">Only your prediction runs are listed here.</p></div>
+    <a class="btn btn-outline" href="{% url 'dataset_history' %}">Full history</a>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Dataset</th><th>Records</th><th>Classification</th><th>Malicious</th><th>Analyzed</th><th></th></tr></thead>
+      <tbody>
+        {% for run in recent_runs %}
+        <tr>
+          <td>{{ run.input_filename }}</td><td>{{ run.total_records }}</td>
+          <td>{{ run.get_overall_class_display }}</td><td>{{ run.malicious_percent|floatformat:1 }}%</td>
+          <td>{{ run.created_at|date:"Y-m-d H:i" }}</td><td><a href="{% url 'predict_result' pk=run.pk %}">View</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="6">No analyses yet. Upload a dataset to begin.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="charts-grid" style="margin-top:1.5rem">
+  <div class="table-card">
+    <h3>Your Recent Alerts</h3>
+    <table><thead><tr><th>Type</th><th>Source</th><th>Severity</th></tr></thead>
+      <tbody>{% for alert in recent_alerts %}<tr><td>{{ alert.attack_type|upper }}</td><td>{{ alert.source_ip }}</td><td>{{ alert.severity|title }}</td></tr>{% empty %}<tr><td colspan="3">No alerts for your account.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <div class="table-card">
+    <h3>Your Recent Traffic</h3>
+    <table><thead><tr><th>Source</th><th>Destination</th><th>Prediction</th></tr></thead>
+      <tbody>{% for log in recent_logs %}<tr><td>{{ log.source_ip }}</td><td>{{ log.dest_ip }}</td><td>{{ log.prediction|upper }}</td></tr>{% empty %}<tr><td colspan="3">No traffic records for your account.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
