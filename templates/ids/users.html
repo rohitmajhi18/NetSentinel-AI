@@ -4,7 +4,7 @@
 <div class="page-header">
   <div>
     <h1>Users</h1>
-    <p class="page-subtitle">Researchers can monitor traffic, analyze datasets, resolve alerts, and train models. Administrators can also manage roles and application settings.</p>
+    <p class="page-subtitle">Users can monitor traffic, analyze datasets, resolve alerts, and view model metrics. Administrators can also manage roles and application settings.</p>
   </div>
 </div>
 
@@ -18,14 +18,14 @@
       <tr>
         <td>{{ u.username }}</td>
         <td>{{ u.email|default:"—" }}</td>
-        <td>{% if u.profile %}{{ u.profile.get_role_display }}{% else %}Researcher{% endif %}</td>
+        <td>{% if u.profile %}{{ u.profile.get_role_display }}{% else %}User{% endif %}</td>
         <td>{{ u.last_login|date:"Y-m-d H:i"|default:"Never" }}</td>
         <td>
           <form method="post" class="role-form">
             {% csrf_token %}
             <input type="hidden" name="user_id" value="{{ u.pk }}">
             <select name="role" aria-label="Role for {{ u.username }}" {% if u.is_superuser %}disabled{% endif %}>
-              <option value="researcher" {% if u.profile.role == "researcher" or not u.profile and not u.is_superuser %}selected{% endif %}>Researcher</option>
+              <option value="user" {% if u.profile.role == "user" or not u.profile and not u.is_superuser %}selected{% endif %}>User</option>
               <option value="admin" {% if u.profile.role == "admin" or u.is_superuser %}selected{% endif %}>Administrator</option>
             </select>
             <button type="submit" class="btn btn-outline btn-sm" {% if u.is_superuser %}disabled{% endif %}>Save</button>

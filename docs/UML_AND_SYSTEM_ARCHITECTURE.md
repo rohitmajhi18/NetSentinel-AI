@@ -1,7 +1,7 @@
 # NetSentinel AI — Role Feature Analysis & UML Architecture Documentation
 
 **System:** NetSentinel AI (AI-Powered Intrusion Detection System)  
-**Version:** 1.0.0 (Production Architecture)  
+**Version:** 1.1.0 (Production Architecture — User & Administrator Roles)  
 **Stack:** Python 3.11/3.14, Django 4.2+, Scikit-Learn, Joblib, SQLite3, Wireshark/TShark, Chart.js  
 
 ---
@@ -13,19 +13,19 @@ NetSentinel AI implements Role-Based Access Control (RBAC) with data isolation v
 ### 1.1 Actor Definitions
 
 1. **Public / Anonymous User**: Unauthenticated visitors accessing public landing and onboarding portals.
-2. **Security Researcher (Analyst / Researcher)**: Operational analyst conducting packet inspection, running batch evaluations, triaging alerts, and analyzing localized threat telemetry.
+2. **User (Standard User / Security Analyst)**: Authenticated operational user conducting packet inspection, running batch evaluations, triaging alerts, managing their personal workspace preferences/settings, and analyzing localized threat telemetry.
 3. **Administrator (SOC Lead / System Admin)**: SOC oversight role possessing global visibility across all system tenants, user management authority, model retraining permissions, and testing governance.
 
 ---
 
 ### 1.2 Role-Based Feature Matrix
 
-| Functional Module | Feature / Capability | Route / Endpoint | Anonymous | Researcher | Administrator | Scope / Access Rules |
+| Functional Module | Feature / Capability | Route / Endpoint | Anonymous | User | Administrator | Scope / Access Rules |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
 | **Authentication & Profile** | View Landing Page | `/` | Read | Read | Read | Public |
-| | User Registration | `/register/` | Create | — | — | Default role assigned: `researcher` |
+| | User Registration | `/register/` | Create | — | — | Default role assigned: `user` |
 | | User Login / Logout | `/login/`, `/logout/` | Execute | Execute | Execute | Session authentication |
-| **Workspace & Dashboard** | Researcher Workspace | `/dashboard/` | — | Read | — | View own alerts, logs, prediction runs |
+| **Workspace & Dashboard** | User Workspace | `/dashboard/` | — | Read | — | View own alerts, logs, prediction runs |
 | | Admin Global SOC Overview | `/dashboard/` | — | — | Read | Global aggregated metrics & user activity |
 | | Telemetry Chart API | `/api/charts/` | — | Read (Own) | Read (Global) | 24h trends, protocol shares, severity splits |
 | **Traffic Monitoring** | Interface Status & Sniffing | `/monitor/` | — | Read | Read | Discovers Wireshark / TShark interfaces |
@@ -39,10 +39,10 @@ NetSentinel AI implements Role-Based Access Control (RBAC) with data isolation v
 | | Resolve Security Alert | `/alerts/<pk>/resolve/`| — | Execute (Own)| Execute (Any) | Marks `is_resolved=True` |
 | | Traffic Audit Logs | `/logs/` | — | Read (Own) | Read (Global) | Tabular packet headers, payloads & confidence |
 | **Analytics & Reporting** | Incident Analytics Reports | `/reports/` | — | Read (Own) | Read (Global) | 7-day attack distribution, resolution KPI |
+| **Settings & Preferences** | Account & Workspace Settings | `/settings/` | — | Read/Write | Read/Write | Theme toggle, user profile, role permissions |
 | **Model Operations** | View Model Metrics | `/train/` | — | Read | Read | View Accuracy, Precision, Recall, F1-Score |
 | | Retrain Random Forest Model| `/train/run/` | — | Blocked (403)| Execute | Asynchronous background retraining worker |
 | **Administration** | User & Role Management | `/users/` | — | Blocked (403)| CRUD | Role promotion/demotion with safety guardrails |
-| | Security & Engine Settings | `/settings/` | — | Blocked (403)| Read/Write | System parameters, TShark path status |
 | | Automated Test Suite Run | `/test-results/` | — | Blocked (403)| Read/Execute | Runs live regression tests TC-01 to TC-10 |
 | | Download Test Run Report | `/test-results/download/` | — | Blocked (403)| Download | Exports markdown report artifact |
 
@@ -55,7 +55,7 @@ The Use Case Diagram models the system boundaries, human actors, external hardwa
 ```mermaid
 usecaseDiagram
     actor "Anonymous User" as Anon
-    actor "Security Researcher" as Researcher
+    actor "User" as RegUser
     actor "Administrator" as Admin
     actor "Network Adapter / TShark" as Sniffer
 
@@ -70,31 +70,33 @@ usecaseDiagram
         usecase "UC-08: Triage & Resolve Alerts" as UC_Alerts
         usecase "UC-09: Explore Traffic Logs" as UC_Logs
         usecase "UC-10: Review Threat Analytics Reports" as UC_Reports
-        usecase "UC-11: Supervise Global SOC Operations" as UC_AdminDash
-        usecase "UC-12: Manage User Roles & Permissions" as UC_Users
-        usecase "UC-13: Retrain Random Forest AI Model" as UC_Train
-        usecase "UC-14: Execute End-to-End Test Suite" as UC_Tests
-        usecase "UC-15: Feature Vector Extraction (41 Dims)" as UC_Feat
-        usecase "UC-16: Execute ML Threat Inference" as UC_Infer
+        usecase "UC-11: Manage Workspace Settings" as UC_Settings
+        usecase "UC-12: Supervise Global SOC Operations" as UC_AdminDash
+        usecase "UC-13: Manage User Roles & Permissions" as UC_Users
+        usecase "UC-14: Retrain Random Forest AI Model" as UC_Train
+        usecase "UC-15: Execute End-to-End Test Suite" as UC_Tests
+        usecase "UC-16: Feature Vector Extraction (41 Dims)" as UC_Feat
+        usecase "UC-17: Execute ML Threat Inference" as UC_Infer
     }
 
     %% Relationships for Anonymous
     Anon --> UC_Auth
 
-    %% Relationships for Researcher
-    Researcher --> UC_Auth
-    Researcher --> UC_Dash
-    Researcher --> UC_Sniff
-    Researcher --> UC_Sim
-    Researcher --> UC_Upload
-    Researcher --> UC_Result
-    Researcher --> UC_Export
-    Researcher --> UC_Alerts
-    Researcher --> UC_Logs
-    Researcher --> UC_Reports
+    %% Relationships for User
+    RegUser --> UC_Auth
+    RegUser --> UC_Dash
+    RegUser --> UC_Sniff
+    RegUser --> UC_Sim
+    RegUser --> UC_Upload
+    RegUser --> UC_Result
+    RegUser --> UC_Export
+    RegUser --> UC_Alerts
+    RegUser --> UC_Logs
+    RegUser --> UC_Reports
+    RegUser --> UC_Settings
 
     %% Inheritance / Extended access for Admin
-    Admin --|> Researcher
+    Admin --|> RegUser
     Admin --> UC_AdminDash
     Admin --> UC_Users
     Admin --> UC_Train
@@ -120,7 +122,8 @@ NetSentinel AI employs a 4-Tier Modular Layered Architecture separating presenta
 graph TB
     subgraph Presentation_Tier ["Tier 1: Presentation & Client Layer"]
         UI_Web["Modern Web Interface (Responsive Light/Dark UI)"]
-        UI_Dash["Role Dashboards (Admin Overview / Researcher Workspace)"]
+        UI_Dash["Role Dashboards (Admin Overview / User Workspace)"]
+        UI_Settings["Settings View (Account Info, Theme Toggle, Role Permissions)"]
         UI_Charts["Chart.js Real-time Telemetry (Hourly Trends, Severity, Attack Types)"]
         UI_Upload["Axios Batch File Upload & Progress Monitor"]
     end
@@ -135,6 +138,7 @@ graph TB
             VC_Monitor["Live Monitor & Traffic Simulator"]
             VC_Predict["Batch Upload, Result & CSV Export Views"]
             VC_Alerts["Alert & Traffic Log Triage Views"]
+            VC_Settings["Settings View Controller (ids/settings.html)"]
             VC_Admin["User Management, Retrain & Test Suite Controllers"]
         end
     end
@@ -189,7 +193,7 @@ The Context Diagram defines the external entities interacting with the NetSentin
 
 ```mermaid
 flowchart TD
-    Researcher(["Security Researcher"])
+    RegUser(["User (Analyst)"])
     Admin(["Administrator"])
     NetAdapter(["Network Interface / Sniffer (TShark)"])
     DatasetSource(["External CSV Dataset Source"])
@@ -197,24 +201,26 @@ flowchart TD
     IDS[["0.0 NetSentinel AI Platform"]]
 
     %% Inflows
-    Researcher -->|"1. Credentials / Session Auth"| IDS
-    Researcher -->|"2. Packet Simulation Requests"| IDS
-    Researcher -->|"3. CSV Upload File"| IDS
-    Researcher -->|"4. Alert Resolution Action"| IDS
+    RegUser -->|"1. Credentials / Session Auth"| IDS
+    RegUser -->|"2. Packet Simulation Requests"| IDS
+    RegUser -->|"3. CSV Upload File"| IDS
+    RegUser -->|"4. Alert Resolution Action"| IDS
+    RegUser -->|"5. Settings / Theme Toggle"| IDS
 
-    Admin -->|"5. Admin Credentials"| IDS
-    Admin -->|"6. User Promotion / Demotion Commands"| IDS
-    Admin -->|"7. Model Retraining Trigger"| IDS
-    Admin -->|"8. Test Suite Run Request"| IDS
+    Admin -->|"6. Admin Credentials"| IDS
+    Admin -->|"7. User Promotion / Demotion Commands"| IDS
+    Admin -->|"8. Model Retraining Trigger"| IDS
+    Admin -->|"9. Test Suite Run Request"| IDS
 
-    NetAdapter -->|"9. Raw Network Packet Streams"| IDS
-    DatasetSource -->|"10. Benchmark CSV Flow Records"| IDS
+    NetAdapter -->|"10. Raw Network Packet Streams"| IDS
+    DatasetSource -->|"11. Benchmark CSV Flow Records"| IDS
 
     %% Outflows
-    IDS -->|"11. Researcher Workspace, Alerts & Logs"| Researcher
-    IDS -->|"12. Scored Batch Results & Downloadable CSV"| Researcher
-    IDS -->|"13. Global SOC Telemetry & User Audit Trail"| Admin
-    IDS -->|"14. Retraining Metrics & Test Results Report"| Admin
+    IDS -->|"12. User Workspace, Alerts & Logs"| RegUser
+    IDS -->|"13. Scored Batch Results & Downloadable CSV"| RegUser
+    IDS -->|"14. Personal Settings & Account Details"| RegUser
+    IDS -->|"15. Global SOC Telemetry & User Audit Trail"| Admin
+    IDS -->|"16. Retraining Metrics & Test Results Report"| Admin
 ```
 
 ---
@@ -226,7 +232,7 @@ DFD Level 1 decomposes the central system into 7 core processes, showing data st
 ```mermaid
 flowchart TB
     %% External Entities
-    User(["Analyst / Admin"])
+    User(["User / Admin"])
     Hardware(["Network Interface"])
     FileIn(["CSV File"])
 
@@ -246,11 +252,11 @@ flowchart TB
     P4["4.0 ML Feature Normalization & Inference"]
     P5["5.0 Alert & Log Persistence Engine"]
     P6["6.0 Model Retraining Worker"]
-    P7["7.0 Telemetry, Reporting & Visualization"]
+    P7["7.0 Telemetry, Reporting & Settings Engine"]
 
     %% Data Flows P1
     User -->|Login / Registration| P1
-    P1 <-->|Validate Credentials & Permissions| DS1
+    P1 <-->|Validate Credentials & Roles (admin/user)| DS1
     P1 -->|Authorized Session Context| P2
     P1 -->|Authorized Session Context| P3
     P1 -->|Authorized Session Context| P7
@@ -278,11 +284,12 @@ flowchart TB
     P6 -->|Write Updated Model & Metrics| DS5
 
     %% Data Flows P7
+    DS1 -->|User Profile & Account Info| P7
     DS2 -->|Read Traffic Logs| P7
     DS3 -->|Read Security Alerts| P7
     DS4 -->|Read Prediction Runs| P7
     DS5 -->|Read Model Accuracy| P7
-    P7 -->|Role-Filtered Dashboards & Reports| User
+    P7 -->|Role-Filtered Dashboards, Settings & Reports| User
 ```
 
 ---
@@ -297,6 +304,7 @@ graph TB
         [TemplateViews]
         [ChartRenderer]
         [UploadHandler]
+        [SettingsManager]
     end
 
     subgraph Security_Gate ["Security & RBAC Component"]
@@ -309,6 +317,7 @@ graph TB
         [MonitorController]
         [BatchPredictController]
         [AlertLogController]
+        [SettingsController]
         [AdminOpsController]
     end
 
@@ -378,7 +387,7 @@ erDiagram
     IDS_USERPROFILE {
         int id PK "Primary Key"
         int user_id FK "References AUTH_USER(id) (Unique)"
-        string role "admin | researcher (Default: researcher)"
+        string role "admin | user (Default: user)"
     }
 
     IDS_ALERT {
@@ -440,8 +449,8 @@ erDiagram
 
 | Parent Entity | Child Entity | Cardinality | Constraint / On Delete | Business Rule |
 | :--- | :--- | :---: | :---: | :--- |
-| `auth_user` | `ids_userprofile` | `1 : 1` | `CASCADE` | Every user has exactly one profile record holding their system role (`admin` or `researcher`). Created automatically on registration. |
-| `auth_user` | `ids_alert` | `1 : N` | `SET_NULL` | Alerts generated during live sniffing or batch runs are attributed to the initiating analyst. Admin views see all alerts; Researchers see only owned alerts. |
+| `auth_user` | `ids_userprofile` | `1 : 1` | `CASCADE` | Every user has exactly one profile record holding their system role (`admin` or `user`). Created automatically on registration. |
+| `auth_user` | `ids_alert` | `1 : N` | `SET_NULL` | Alerts generated during live sniffing or batch runs are attributed to the initiating analyst. Admin views see all alerts; Users see only owned alerts. |
 | `auth_user` | `ids_trafficlog` | `1 : N` | `SET_NULL` | High-frequency flow logs are attributed to the active session user. Retraining pipelines ingest these logs to continuously adapt the ML model. |
 | `auth_user` | `ids_predictionrun`| `1 : N` | `CASCADE` | Represents batch CSV scoring jobs. When a user account is deleted, their uploaded batch runs and cached evaluations are deleted. |
 | *(None)* | `ids_modelmetrics` | Standalone | N/A | Immutable time-series audit trail of model performance recorded after every initial setup or background retraining run. |
@@ -451,9 +460,11 @@ erDiagram
 ## 8. Summary of Architectural Attributes
 
 1. **Security & Principle of Least Privilege:**
-   - Researchers cannot promote accounts, access settings, or trigger background retraining tasks.
+   - Standard Users cannot promote accounts, trigger background retraining tasks, or execute system test suites.
    - Guardrails enforce that the last remaining administrator account cannot be demoted, and superusers always retain administrator capabilities.
-2. **Resilience & Graceful Degradation:**
+2. **Access to Workspace Settings:**
+   - Both Users and Administrators have direct access to `/settings/`. The settings dashboard automatically tailors available options based on role permissions (account profile and theme toggling for Users; system-level paths, user management, and retraining shortcuts for Administrators).
+3. **Resilience & Graceful Degradation:**
    - If hardware packet sniffing (`tshark`) is unavailable in the environment, the system provides a continuous fallback traffic simulator with complete 41-feature NSL-KDD synthesis.
-3. **Decoupled Asynchronous Retraining:**
+4. **Decoupled Asynchronous Retraining:**
    - Model retraining executes in a background thread to prevent HTTP worker starvation, serializing new weights directly to disk via `joblib`.

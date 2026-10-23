@@ -4,28 +4,90 @@
 <div class="page-header">
   <div>
     <h1>Settings</h1>
-    <p class="page-subtitle">Application preferences.</p>
+    <p class="page-subtitle">User account preferences and workspace configuration.</p>
   </div>
 </div>
 
 <div class="chart-card" style="margin-bottom: 1.5rem;">
-  <h3>Appearance</h3>
-  <div style="display: flex; align-items: center; justify-content: space-between;">
+  <h3>User Profile & Account</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
     <div>
-      <p style="font-weight: 500; color: var(--text-primary);">Theme Preference</p>
-      <p style="color:var(--text-muted); font-size: 0.875rem;">Switch between light and dark themes.</p>
+      <div style="color: var(--text-muted); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em;">Username</div>
+      <div style="font-weight: 600; font-size: 1.1rem; color: var(--text-primary); margin-top: 0.25rem;">{{ request.user.username }}</div>
+    </div>
+    <div>
+      <div style="color: var(--text-muted); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em;">Assigned Role</div>
+      <div style="margin-top: 0.25rem;">
+        <span class="badge {% if request.user.is_superuser or request.user.profile.role == 'admin' %}badge-danger{% else %}badge-info{% endif %}">
+          {% if request.user.is_superuser %}Administrator{% else %}{{ request.user.profile.get_role_display|default:"User" }}{% endif %}
+        </span>
+      </div>
+    </div>
+    <div>
+      <div style="color: var(--text-muted); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em;">Email</div>
+      <div style="color: var(--text-primary); margin-top: 0.25rem;">{{ request.user.email|default:"Not configured" }}</div>
+    </div>
+    <div>
+      <div style="color: var(--text-muted); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em;">Member Since</div>
+      <div style="color: var(--text-primary); margin-top: 0.25rem;">{{ request.user.date_joined|date:"M d, Y" }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom: 1.5rem;">
+  <h3>Appearance & Workspace</h3>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+    <div>
+      <p style="font-weight: 500; color: var(--text-primary); margin: 0;">Theme Preference</p>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0.25rem 0 0 0;">Toggle between high-contrast dark mode and clean light theme.</p>
     </div>
     <button id="themeToggleBtn" class="btn btn-outline" onclick="toggleTheme()">
       Toggle Theme
     </button>
   </div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0;">
+    <div>
+      <p style="font-weight: 500; color: var(--text-primary); margin: 0;">Data Export Encoding</p>
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0.25rem 0 0 0;">Batch prediction results export in RFC 4180 compliant CSV format.</p>
+    </div>
+    <span class="badge badge-success">UTF-8 CSV</span>
+  </div>
+</div>
+
+<div class="chart-card" style="margin-bottom: 1.5rem;">
+  <h3>Role Capabilities & Permissions</h3>
+  {% if request.user.is_superuser or request.user.profile.role == 'admin' %}
+  <p style="color: var(--text-primary); margin-bottom: 0.75rem;">
+    You have <strong>Administrator</strong> privileges with full access to SOC oversight, role administration, continuous model retraining, and system validation suites.
+  </p>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="{% url 'users' %}" class="btn btn-outline btn-sm">Manage Users & Roles</a>
+    <a href="{% url 'train' %}" class="btn btn-outline btn-sm">ML Model Retraining</a>
+    <a href="{% url 'test_results' %}" class="btn btn-outline btn-sm">System Test Results</a>
+  </div>
+  {% else %}
+  <p style="color: var(--text-primary); margin-bottom: 0.5rem;">
+    You are signed in as a standard <strong>User</strong>. Your workspace includes:
+  </p>
+  <ul style="color: var(--text-muted); font-size: 0.875rem; padding-left: 1.25rem; line-height: 1.6;">
+    <li>Real-time traffic capture and synthetic traffic flow simulation</li>
+    <li>CSV network flow dataset upload and AI batch prediction scoring</li>
+    <li>Security alert inspection, severity triage, and resolution</li>
+    <li>Personalized 24-hour threat telemetry and incident analytics</li>
+    <li>Export of scored classification records with model confidence ratings</li>
+  </ul>
+  {% endif %}
 </div>
 
 <div class="chart-card">
-  <h3>Detection model</h3>
-  <p style="color:var(--text-muted);font-size:0.875rem;margin-top:0.5rem">
-    Predictions use the trained Random Forest model stored in <code>models/ids_model.joblib</code>.
-    Retrain from <a href="{% url 'train' %}">ML Training</a> to refresh weights.
+  <h3>AI Detection Engine</h3>
+  <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem; line-height: 1.5;">
+    Threat evaluations run against a 41-feature Random Forest model serialized at <code>models/ids_model.joblib</code>.
+    {% if request.user.is_superuser or request.user.profile.role == 'admin' %}
+    You can trigger retraining with the latest captured traffic from <a href="{% url 'train' %}">ML Training</a>.
+    {% else %}
+    Model performance metrics and training history can be reviewed on the <a href="{% url 'train' %}">ML Training</a> overview.
+    {% endif %}
   </p>
 </div>
 {% endblock %}

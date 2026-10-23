@@ -61,18 +61,18 @@
             <span>Traffic Logs</span></a></li>
         <li><a href="{% url 'train' %}" class="{% if request.resolver_match.url_name == 'train' %}active{% endif %}">🧠
             <span>ML Training</span></a></li>
+        <li><a href="{% url 'settings' %}"
+            class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a>
+        </li>
         {% if user.is_superuser or user.profile.role == 'admin' %}
         <li><a href="{% url 'users' %}" class="{% if request.resolver_match.url_name == 'users' %}active{% endif %}">👥
             <span>Users</span></a></li>
         <li><a href="{% url 'test_results' %}"
             class="{% if request.resolver_match.url_name == 'test_results' %}active{% endif %}">🧪 <span>Test
               Results</span></a></li>
-        <li><a href="{% url 'settings' %}"
-            class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">⚙ <span>Settings</span></a>
-        </li>
         {% endif %}
       </ul>
-      <div class="sidebar-role">{{ user.profile.get_role_display|default:"Administrator" }}</div>
+      <div class="sidebar-role">{% if user.is_superuser %}Administrator{% else %}{{ user.profile.get_role_display|default:"User" }}{% endif %}</div>
       <a href="{% url 'logout' %}" class="btn btn-outline btn-sm sidebar-logout">Logout</a>
     </aside>
     <main class="main">

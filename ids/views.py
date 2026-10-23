@@ -111,7 +111,7 @@ def register_view(request):
     form = UserCreationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        UserProfile.objects.create(user=user, role="researcher")
+        UserProfile.objects.create(user=user, role="user")
         login(request, user)
         messages.success(request, "Account created. Welcome to NetSentinel AI.")
         return redirect("dashboard")
@@ -133,7 +133,7 @@ def dashboard(request):
         user_activity = [
             {
                 "username": account.username,
-                "role": "Administrator" if account.is_superuser else getattr(getattr(account, "profile", None), "get_role_display", lambda: "Researcher")(),
+                "role": "Administrator" if account.is_superuser else getattr(getattr(account, "profile", None), "get_role_display", lambda: "User")(),
                 "alerts": Alert.objects.filter(user=account).count(),
                 "logs": TrafficLog.objects.filter(user=account).count(),
                 "runs": PredictionRun.objects.filter(user=account).count(),
@@ -516,7 +516,7 @@ def users_view(request):
             messages.error(request, "Choose a valid account role.")
             return redirect("users")
         target_profile = getattr(target, "profile", None)
-        current_role = "admin" if target.is_superuser else getattr(target_profile, "role", "researcher")
+        current_role = "admin" if target.is_superuser else getattr(target_profile, "role", "user")
         if target.is_superuser and new_role != "admin":
             messages.error(request, "A superuser account must retain the administrator role.")
             return redirect("users")

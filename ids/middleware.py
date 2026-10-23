@@ -2,8 +2,8 @@ from django.http import HttpResponseForbidden
 
 
 class RoleAccessMiddleware:
-    ADMIN_ONLY = {"users", "settings", "train_model"}
-    RESEARCHER_ACCESS = {
+    ADMIN_ONLY = {"users", "train_model", "test_results", "run_tests_api", "download_test_report"}
+    USER_ACCESS = {
         "dashboard",
         "chart_api",
         "alerts",
@@ -18,6 +18,7 @@ class RoleAccessMiddleware:
         "predict_result",
         "predict_download",
         "dataset_history",
+        "settings",
     }
     PUBLIC = {"landing", "login", "register", "logout"}
 
@@ -40,9 +41,9 @@ class RoleAccessMiddleware:
             return None
 
         profile = getattr(request.user, "profile", None)
-        role = "admin" if request.user.is_superuser else getattr(profile, "role", "researcher")
+        role = "admin" if request.user.is_superuser else getattr(profile, "role", "user")
         if role == "admin":
             return None
-        if role == "researcher" and route_name in self.RESEARCHER_ACCESS and route_name not in self.ADMIN_ONLY:
+        if role in ("user", "researcher") and route_name in self.USER_ACCESS and route_name not in self.ADMIN_ONLY:
             return None
         return HttpResponseForbidden("You do not have permission to access this page.")
