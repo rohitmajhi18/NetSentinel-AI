@@ -7,6 +7,22 @@ SECRET_KEY = "django-insecure-netsentinel-dev-key-change-in-production"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://netsentinal.rohitmajhi.in",
+    "https://*.rohitmajhi.in",
+    "http://netsentinal.rohitmajhi.in",
+    "https://netsentinel.rohitmajhi.in",
+    "http://netsentinel.rohitmajhi.in",
+    "http://127.0.0.1",
+    "http://localhost",
+]
+
+_extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if _extra_csrf:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in _extra_csrf.split(",") if origin.strip()])
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

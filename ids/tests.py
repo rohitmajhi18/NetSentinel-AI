@@ -93,3 +93,9 @@ class RoleAccessTests(TestCase):
         self.assertRedirects(response, reverse("dashboard"))
         user = User.objects.get(username="new-user")
         self.assertEqual(user.profile.role, "user")
+
+    def test_csrf_trusted_origins_configured(self):
+        from django.conf import settings
+        self.assertIn("https://netsentinal.rohitmajhi.in", settings.CSRF_TRUSTED_ORIGINS)
+        self.assertIn("https://*.rohitmajhi.in", settings.CSRF_TRUSTED_ORIGINS)
+
